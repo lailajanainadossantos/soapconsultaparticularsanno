@@ -1,15 +1,94 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang='pt-br'>
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Gerador SOAP — Consulta de Emagrecimento</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+<meta charset='utf-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'>
+<title>Gerador SOAP — Emagrecimento (A4C duas vias)</title>
+<script src='https://cdn.tailwindcss.com'></script>
+<style>
+@media print {
+  @page { size: A4 landscape; margin: 8mm; }
+  .no-print { display:none; }
+  .print-only { display:block; }
+}
+.print-only { display:none; }
+.via { width:49%; border:1px solid #ccc; padding:10px; border-radius:8px; }
+.hdr img { height:40px; }
+.hdr { display:flex; align-items:center; gap:10px; border-bottom:1px solid #ddd; margin-bottom:5px; }
+.footer { font-size:11px; border-top:1px solid #ddd; margin-top:5px; padding-top:5px; }
+</style>
 </head>
-<body class="bg-slate-50 text-slate-900 min-h-screen">
-  <main class="max-w-6xl mx-auto p-6">
-    <h1 class="text-xl font-bold mb-4">Gerador SOAP — Consulta de Emagrecimento</h1>
-    <p>Interface geradora de prontuário SOAP e prescrição Wegovy/Mounjaro.</p>
-  </main>
+<body class='bg-slate-50 text-slate-900 min-h-screen'>
+<main class='max-w-7xl mx-auto p-6'>
+<header class='no-print flex justify-between items-center mb-4'>
+<h1 class='text-xl font-bold'>Gerador SOAP — Consulta de Emagrecimento</h1>
+<div class='text-sm text-slate-500'>A4 horizontal • Duas vias</div>
+</header>
+
+<section class='no-print'>
+<form id='form' class='bg-white p-5 rounded-xl shadow space-y-3'>
+<label>Data <input name='data' type='date' class='border rounded w-full p-1'></label>
+<label>Peso (kg) <input name='peso' type='number' step='0.1' class='border rounded w-full p-1'></label>
+<label>Altura (m) <input name='altura' type='number' step='0.01' class='border rounded w-full p-1'></label>
+<label>Comorbidades <input name='comorbidades' class='border rounded w-full p-1' placeholder='NEGA ou descrever'></label>
+<label>Alergias <input name='alergias' class='border rounded w-full p-1' placeholder='NEGA ou descrever'></label>
+<label>Medicações em uso <input name='medicacoes' class='border rounded w-full p-1'></label>
+<label>HMP <input name='hmp' class='border rounded w-full p-1'></label>
+<label>Motivação <input name='motivacao' class='border rounded w-full p-1'></label>
+<label>História <textarea name='historia' class='border rounded w-full p-1'></textarea></label>
+<label>Exame físico <textarea name='exame' class='border rounded w-full p-1'></textarea></label>
+<label>Avaliação <textarea name='avaliacao' class='border rounded w-full p-1'></textarea></label>
+<label>Plano <textarea name='plano' class='border rounded w-full p-1'></textarea></label>
+<label>Prescrição <textarea name='prescricao' class='border rounded w-full p-1'></textarea></label>
+<button type='button' id='gerar' class='bg-blue-600 text-white rounded p-2 w-full mt-2'>Gerar PDF (duas vias)</button>
+</form>
+</section>
+
+<section id='print-area' class='print-only'>
+<div style='display:flex;justify-content:space-between;gap:8px'>
+<div class='via'>
+<div class='hdr'><img src='./logo.png'><h2>Consulta de Emagrecimento — Prontuário SOAP</h2></div>
+<pre id='via1'></pre>
+<div class='footer'>
+Dra. Laila Janaína dos Santos — CRM-SC 38237<br>
+SannoMed Clínica Integrada | Rua Otto Júlio Malina, 671<br>
+Tel: (48) 3034-3735 | contato@sannomed.com.br
+</div>
+</div>
+<div class='via'>
+<div class='hdr'><img src='./logo.png'><h2>Consulta de Emagrecimento — Prontuário SOAP</h2></div>
+<pre id='via2'></pre>
+<div class='footer'>
+Dra. Laila Janaína dos Santos — CRM-SC 38237<br>
+SannoMed Clínica Integrada | Rua Otto Júlio Malina, 671<br>
+Tel: (48) 3034-3735 | contato@sannomed.com.br
+</div>
+</div>
+</div>
+</section>
+
+<script>
+document.getElementById('gerar').onclick = function() {
+  const data = Object.fromEntries(new FormData(document.getElementById('form')).entries());
+  let text = `#Comorbidades: ${data.comorbidades}
+#Alergias: ${data.alergias}
+#Medicações: ${data.medicacoes}
+#Peso: ${data.peso} | #Altura: ${data.altura}
+#HMP: ${data.hmp}
+#Motivação: ${data.motivacao}
+
+#S: ${data.historia}
+#O: ${data.exame}
+#A: ${data.avaliacao}
+#P: ${data.plano}
+
+Prescrição:
+${data.prescricao}`;
+  document.getElementById('via1').textContent = text;
+  document.getElementById('via2').textContent = text;
+  window.print();
+};
+</script>
+</main>
 </body>
 </html>
