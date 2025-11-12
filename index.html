@@ -1,453 +1,57 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang='pt-br'>
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>SannoMed — Gerador SOAP & Receita (v32)</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    :root { --brand:#0ea5e9; --ink:#0f172a; }
-    body { color: var(--ink); }
-    .card { background:#fff; border-radius:18px; box-shadow: 0 12px 30px rgba(2,6,23,.06); }
-    .label { font-size:12px; color:#334155; font-weight:600; letter-spacing:.02em }
-    .input { width:100%; padding:.7rem .9rem; border:1px solid #e2e8f0; border-radius:12px; }
-    .btn  { padding:.55rem .9rem; border-radius:10px; font-weight:700; }
-    .btn-primary{ background:var(--brand); color:#fff; }
-    .btn-ghost { border:1px solid #e2e8f0; background:#fff; }
-    .btn-sm { padding:.3rem .5rem; font-size:11px; border-radius:8px; font-weight:600; }
-    .mono { white-space:pre-wrap; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Courier New", monospace; font-size: 13px; line-height:1.5 }
-    .rx-card { border:1px solid #e2e8f0; border-radius:10px; padding:10px; display:flex; flex-direction:column; min-height: 185mm; }
-    .rx-headline { font-size:14px; font-weight:800; text-align:center; margin-bottom:4px; }
-    .rx-header { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; margin-bottom:4px; }
-    .rx-header img { height:36px; }
-    .rx-brand { font-weight:800; letter-spacing:.02em; }
-    .rx-meta { font-size:11px; color:#334155; text-align:center; }
-    .rx-body { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Courier New", monospace; font-size:11px; line-height:1.5; white-space:pre-wrap; flex: 1 1 auto; }
-    .sig { border-top:1px solid #000; width:100%; text-align:center; font-size:11px; padding-top:4px; margin-top:8px; }
-    .editable { min-height: 220px; border: 1px solid #e2e8f0; border-radius: 12px; padding: .75rem .9rem; outline: none; }
-    .editable:empty:before { content: attr(data-placeholder); color: #94a3b8; }
-    .chip { display:inline-flex; align-items:center; gap:6px; padding:.35rem .55rem; border:1px solid #e2e8f0; border-radius:999px; font-size:12px; }
-    .brand-bar { display:flex; align-items:center; gap:10px; justify-content:center; text-align:center; }
-    .brand-bar .clinic { font-weight:800; font-size:14px; letter-spacing:.02em; }
-    .brand-bar .meta { font-size:11px; color:#334155; }
-    @media print {
-      @page { size: A4 landscape; margin: 12mm; }
-      .no-print { display:none !important; }
-      .print-only { display:block !important; }
-      body { background:#fff; }
-      .grid-2 { display:grid; grid-template-columns: 1fr 1fr; gap:10px; }
-      .brand-print { margin-bottom:6px; }
-    }
-    .print-only { display:none; }
-    .grid-2 { display:grid; grid-template-columns: 1fr 1fr; gap:10px; }
-    .break-after { page-break-after: always; }
-    .divider { height:2px; background:linear-gradient(90deg, transparent, var(--brand), transparent); margin:6px 0; }
-  </style>
+<meta charset='utf-8'>
+<title>SannoMed — Gerador SOAP & Receita</title>
+<script src='https://cdn.tailwindcss.com'></script>
+<style>
+:root { --brand:#0ea5e9; }
+body{background:#f8fafc;color:#0f172a;}
+.card{background:#fff;border-radius:12px;box-shadow:0 2px 6px rgba(0,0,0,.1);padding:16px;}
+.input{width:100%;padding:6px 8px;border:1px solid #ccc;border-radius:8px;}
+.btn{padding:6px 10px;border-radius:8px;font-weight:600;}
+.btn-primary{background:var(--brand);color:#fff;}
+.btn-ghost{border:1px solid #ccc;background:#fff;}
+.mono{white-space:pre-wrap;font-family:monospace;font-size:13px;}
+@media print{@page{size:A4 landscape;margin:12mm}.no-print{display:none!important}}
+</style>
 </head>
-<body class="bg-slate-50 text-slate-900 min-h-screen">
-  <main class="max-w-6xl mx-auto p-6">
-    <header class="no-print mb-6">
-      <div class="brand-bar">
-        <img src="./logo.png" class="h-10 w-auto rounded-sm ring-1 ring-slate-200 bg-white p-1" alt="SannoMed">
-        <div>
-          <div class="clinic">SannoMed</div>
-          <div class="meta">Rua Otto Júlio Malina, 671 • Tel: (48) 3034-3735 • contato@sannomed.com.br</div>
-        </div>
-      </div>
-      <div class="divider"></div>
-      <div class="flex items-center justify-between">
-        <h1 class="text-xl font-bold">Gerador SOAP & Receita — Emagrecimento</h1>
-        <div class="hidden md:flex gap-2 text-sm text-slate-600">
-          <span><strong>IMC:</strong> <span id="imcVal">—</span></span>
-        </div>
-      </div>
-    </header>
-
-    <section class="grid grid-cols-1 lg:grid-cols-2 gap-6 no-print">
-      <form id="formPront" class="card p-6 space-y-5">
-        <h2 class="text-lg font-semibold">Prontuário — Via única</h2>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <label class="label">#Data automática
-            <input type="date" name="dataConsulta" id="dataConsulta" class="input">
-          </label>
-          <label class="label">#Nome do paciente
-            <input name="nome" class="input" placeholder="Nome completo" value="LAILA JANAINA">
-          </label>
-        </div>
-
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <label class="label">Peso (kg)
-            <input type="number" step="0.1" name="peso" id="peso" class="input" placeholder="65" value="65">
-          </label>
-          <label class="label">Altura (m)
-            <input type="number" step="0.01" name="altura" id="altura" class="input" placeholder="1.69" value="1.69">
-          </label>
-          <div class="label">IMC
-            <div class="input bg-slate-50"><span id="imcBadge">—</span></div>
-          </div>
-        </div>
-
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <label class="label">#Comorbidade
-            <input name="comorbidade" class="input" placeholder="NEGA ou descrever" value="Nega">
-          </label>
-          <label class="label">#Alergias
-            <input name="alergias" class="input" placeholder="NEGA ou descrever" value="Nega">
-          </label>
-          <label class="label">#MUC
-            <input name="muc" class="input" placeholder="Medicações em uso correntes" value="Nega">
-          </label>
-        </div>
-
-        <div class="grid grid-cols-1 gap-3">
-          <label class="label">#S:
-            <textarea name="S" rows="4" class="input" placeholder=""></textarea>
-          </label>
-          <label class="label">#O:
-            <textarea name="O" rows="5" class="input">BEG, LOC, AAA
-AC: RCR 2T BNF SS | AP: MV+ bilat., sem ruídos adventícios
-Abdome: RHA+, depressível, sem dor
-Neuro: sem déficits focais</textarea>
-          </label>
-          <label class="label">#P:
-            <textarea name="P" rows="7" class="input">Prescrevo.
-Oriento prática regular de atividade física. Evitar jejum prolongado e bebidas
-açucaradas e aumentar ingesta hídrica.
-Explico sobre fisiologia dos medicamentos, explico sobre possíveis efeitos
-colaterais associados.
-Alerto sobre sinais de alarme: dor abdominal intensa, náuseas persistentes,
-vômitos, icterícia, palpitações, hipotensão, hipoglicemia — se presentes,
-buscar avaliação médica.</textarea>
-          </label>
-        </div>
-
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
-          <button type="button" id="btnPrint" class="btn btn-primary w-full">Baixar/Imprimir (2 páginas)</button>
-          <button type="button" id="btnCopiarTexto" class="btn btn-ghost w-full">Copiar SOAP</button>
-          <div class="flex gap-2">
-            <button type="button" id="btnCompactar" class="btn-sm btn-ghost">Compactar fonte</button>
-            <button type="button" id="btnExpandir" class="btn-sm btn-ghost">Expandir fonte</button>
-          </div>
-        </div>
-      </form>
-
-      <div class="card p-6 space-y-4">
-        <div>
-          <h3 class="text-lg font-semibold mb-2">Prescrição (prévia) — <span class="text-slate-500">editável</span></h3>
-          <div id="previewRX" class="mono editable" contenteditable="true"
-               data-placeholder="Monte pelos seletores abaixo ou digite/cole aqui. O que estiver aqui será impresso."></div>
-          <p class="text-xs text-slate-500 mt-2">Dica: Enter ×2 cria uma linha em branco; as quebras são preservadas.</p>
-        </div>
-      </div>
-    </section>
-
-    <section class="mt-8 card p-6 space-y-5 no-print">
-      <h2 class="text-lg font-semibold">Selecionar medicações</h2>
-
-      <div class="grid grid-cols-1 md:grid-cols-7 gap-3">
-        <div class="label">Principal</div>
-        <label class="chip"><input type="radio" name="principal" value="wegovy" checked> Wegovy</label>
-        <label class="chip"><input type="radio" name="principal" value="mounjaro"> Mounjaro</label>
-
-        <label class="label md:col-span-2">Apresentação
-          <select id="apres" class="input">
-            <optgroup label="Wegovy — canetas">
-              <option value="wg-0.25">Wegovy 0,25 mg (pen)</option>
-              <option value="wg-0.5">Wegovy 0,5 mg (pen)</option>
-              <option value="wg-1.0">Wegovy 1 mg (pen)</option>
-              <option value="wg-1.7">Wegovy 1,7 mg (pen)</option>
-              <option value="wg-2.4">Wegovy 2,4 mg (pen)</option>
-            </optgroup>
-            <optgroup label="Mounjaro — seringas pré-cheias">
-              <option value="mj-2.5">Mounjaro 2,5 mg/dose</option>
-              <option value="mj-5">Mounjaro 5 mg/dose</option>
-              <option value="mj-7.5">Mounjaro 7,5 mg/dose</option>
-              <option value="mj-10">Mounjaro 10 mg/dose</option>
-            </optgroup>
-          </select>
-        </label>
-
-        <label class="label">Dose semanal (Wegovy, mg)
-          <input id="wgDose" type="number" step="0.25" min="0.25" value="0.25" class="input">
-        </label>
-        <label class="label">Multiplicadores Wegovy
-          <input id="wgMult" class="input" value="1,1,2,2,4">
-        </label>
-        <label class="label">Nº de doses (Mounjaro)
-          <input type="number" min="1" step="1" id="nDoses" value="4" class="input">
-        </label>
-      </div>
-
-      <div class="flex flex-wrap gap-3">
-        <button type="button" id="btnPreviewPrincipal" class="btn btn-ghost">Pré-visualizar principal</button>
-        <button type="button" id="btnAddPrincipal" class="btn btn-primary">Adicionar principal</button>
-      </div>
-
-      <hr/>
-
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div class="flex items-center gap-2">
-          <input type="checkbox" id="selOnd">
-          <label for="selOnd" class="label">Ondansetrona 8 mg</label>
-          <button type="button" id="btnAddOnd" class="btn-sm btn-ghost">Adicionar</button>
-        </div>
-        <div class="flex items-center gap-2">
-          <input type="checkbox" id="selPeg">
-          <label for="selPeg" class="label">PEG-Lax (polietilenoglicol 4000)</label>
-          <button type="button" id="btnAddPeg" class="btn-sm btn-ghost">Adicionar</button>
-        </div>
-        <div class="flex items-center gap-2">
-          <input id="customTxt" class="input" placeholder="Outro item...">
-          <button type="button" id="btnAddCustom" class="btn-sm btn-ghost">Adicionar</button>
-        </div>
-      </div>
-
-      <div class="mt-2 flex gap-2">
-        <button type="button" id="btnLimparTodos" class="btn btn-ghost">Limpar prescrição</button>
-      </div>
-    </section>
-
-    <section id="printSOAP" class="print-only break-after">
-      <div class="brand-print brand-bar">
-        <img src="./logo.png" class="h-10 w-auto" alt="SannoMed">
-        <div>
-          <div class="clinic">SannoMed</div>
-          <div class="meta">Rua Otto Júlio Malina, 671 • Tel: (48) 3034-3735 • contato@sannomed.com.br</div>
-        </div>
-      </div>
-      <pre id="outSOAP" class="mono"></pre>
-    </section>
-
-    <section id="printRX" class="print-only">
-      <div class="grid-2">
-        <div id="rxVia1" class="rx-card">
-          <div class="rx-headline">Receita médica — 1ª via</div>
-          <div class="rx-header">
-            <img src="./logo.png" alt="SannoMed">
-            <div class="rx-brand">SannoMed</div>
-            <div class="rx-meta">Rua Otto Júlio Malina, 671 • Tel: (48) 3034-3735 • contato@sannomed.com.br</div>
-          </div>
-          <div class="rx-meta" id="meta1"></div>
-          <div class="rx-body" id="body1"></div>
-          <div class="sig">Dra. Laila Janaína dos Santos — CRM-SC 38237</div>
-        </div>
-        <div id="rxVia2" class="rx-card">
-          <div class="rx-headline">Receita médica — 2ª via</div>
-          <div class="rx-header">
-            <img src="./logo.png" alt="SannoMed">
-            <div class="rx-brand">SannoMed</div>
-            <div class="rx-meta">Rua Otto Júlio Malina, 671 • Tel: (48) 3034-3735 • contato@sannomed.com.br</div>
-          </div>
-          <div class="rx-meta" id="meta2"></div>
-          <div class="rx-body" id="body2"></div>
-          <div class="sig">Dra. Laila Janaína dos Santos — CRM-SC 38237</div>
-        </div>
-      </div>
-    </section>
-  </main>
-
-  <script>
-  document.addEventListener('DOMContentLoaded', function(){
-    const dataEl = document.getElementById('dataConsulta');
-    const today = new Date();
-    const iso = new Date(today.getTime() - (today.getTimezoneOffset()*60000)).toISOString().slice(0,10);
-    dataEl.value = iso;
-    const peso = document.getElementById('peso');
-    const altura = document.getElementById('altura');
-    function updateIMC(){
-      const p = parseFloat(peso.value); const a = parseFloat(altura.value);
-      let imc = NaN;
-      if (p>0 && a>0) imc = p/(a*a);
-      const text = isFinite(imc) ? imc.toFixed(1) : '—';
-      document.getElementById('imcVal').textContent = text;
-      document.getElementById('imcBadge').textContent = text;
-    }
-    peso.addEventListener('input', updateIMC);
-    altura.addEventListener('input', updateIMC);
-    updateIMC();
-
-    function buildSOAP(d){
-      return `#Data: ${d.dataConsulta||''}
-#Nome do paciente: ${d.nome||''}
-#Comorbidade: ${d.comorbidade||'NEGA'}
-#Alergias: ${d.alergias||'NEGA'}
-#MUC: ${d.muc||''}
-#Peso: ${d.peso||''} | #Altura: ${d.altura||''} | #IMC: ${(d.peso&&d.altura)?(parseFloat(d.peso)/(parseFloat(d.altura)**2)).toFixed(1):''}
-#S:
-${d.S||''}
-#O:
-${d.O||''}
-#P:
-${d.P||''}`;
-    }
-
-    const previewDiv = document.getElementById('previewRX');
-    function getPreviewAsPlain(){
-      let html = previewDiv.innerHTML;
-      html = html
-        .replace(/
-/g, '
-')
-        .replace(/&nbsp;/g, ' ')
-        .replace(/<div><br\s*\/?><\/div>/gi, '
-
-')
-        .replace(/<br\s*\/?>(?=\s*<br\s*\/?>(\s|
-|)*)/gi, '<br><br>')
-        .replace(/<br\s*\/?>(?!
-)/gi, '
-')
-        .replace(/<\/div>\s*<div>/gi, '
-')
-        .replace(/<div>/gi, '')
-        .replace(/<\/div>/gi, '');
-      html = html.replace(/<[^>]+>/g, '');
-      return html.replace(/\s+$/,''); 
-    }
-    function encodeHTML(s){
-      return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-    }
-
-    const ORD = ["primeira","segunda","terceira","quarta","quinta","sexta","sétima","oitava","nona","décima"];
-    const BASE_CLICK_0_25 = { "wg-0.25":75, "wg-0.5":37, "wg-1.0":19, "wg-1.7":11, "wg-2.4":8 };
-    const LABELS_WG = { "wg-0.25":"0,25mg", "wg-0.5":"0,5mg", "wg-1.0":"1mg", "wg-1.7":"1,7mg", "wg-2.4":"2,4mg" };
-    function buildWegovy(apres, baseDoseMg, multStr){
-      const baseClicksPerQuarter = BASE_CLICK_0_25[apres];
-      const labelDose = LABELS_WG[apres];
-      const factor = Math.max(0.25, parseFloat(baseDoseMg||'0.25')) / 0.25;
-      const mults = (multStr||'1,1,2,2,4').split(',').map(s=>parseFloat(s.trim())).filter(n=>!isNaN(n)&&n>0);
-      const seq = (mults.length?mults:[1,1,2,2,4]).map((m,i)=>{
-        const ord = ORD[i] || `${i+1}ª`;
-        const clicks = Math.round(baseClicksPerQuarter * factor * m);
-        return `Na ${ord} semana aplicar ${clicks} cliques`;
-      }).join('\n');
-      return `1. Wegovy ${labelDose} (Semaglutida) - 1Cx
-Aplicar por via subcutânea, 1x por semana, sempre no mesmo dia. 
-${seq}
-Local de aplicação cerca de 4 dedos da cicatriz umbilical, alternando os locais de aplicação`;
-    }
-    function buildMounjaro(label, nDoses){
-      const d = (label||'').replace('Mounjaro ','').replace(' mg/dose','').trim();
-      const dosePretty = d.replace(' ','');
-      const n = Math.max(1, parseInt(nDoses||'4',10));
-      return `1. Mounjaro ${dosePretty}mg - 1CX
-Aplicar por via subcutânea, 1x por semana, sempre no mesmo dia (${n} doses) 
-Local de aplicação cerca de 4 dedos da cicatriz umbilical, alternando os locais de aplicação`;
-    }
-    function buildOnd(){
-      return `USO ORAL 
-1. Ondansetrona (ondif ou similar) 8mg _ Cx 
-Tomar 1 cp de 8 em 8h se náusea ou enjoo`;
-    }
-    function buildPeg(){
-      return `USO ORAL
-2. Polietilenoglicol 4000 (Peg-Lax) _ Cx
-Diluir um sache em um copo de água filtrada e tomar 1x ao dia. 
-Aumentar ingesta hídrica e de alimentos ricos em fibra`;
-    }
-
-    const btnPreviewPrincipal = document.getElementById('btnPreviewPrincipal');
-    const btnAddPrincipal = document.getElementById('btnAddPrincipal');
-    const btnAddOnd = document.getElementById('btnAddOnd');
-    const btnAddPeg = document.getElementById('btnAddPeg');
-    const btnAddCustom = document.getElementById('btnAddCustom');
-    const btnLimpar = document.getElementById('btnLimparTodos');
-    const btnCompactar = document.getElementById('btnCompactar');
-    const btnExpandir = document.getElementById('btnExpandir');
-    const btnCopiar = document.getElementById('btnCopiarTexto');
-    const btnPrint = document.getElementById('btnPrint');
-
-    function principalChoice(){ return document.querySelector('input[name="principal"]:checked').value; }
-
-    let principalTxt = '';
-    btnPreviewPrincipal.addEventListener('click', () => {
-      const medSel = principalChoice();
-      const apres = document.getElementById('apres').value;
-      const baseDose = document.getElementById('wgDose').value;
-      const mult = document.getElementById('wgMult').value;
-      const nD = document.getElementById('nDoses').value;
-      if (medSel==='wegovy'){
-        principalTxt = buildWegovy(apres, baseDose, mult);
-      } else {
-        const label = document.getElementById('apres').selectedOptions[0].textContent;
-        principalTxt = buildMounjaro(label, nD);
-      }
-      const cur = getPreviewAsPlain();
-      previewDiv.textContent = principalTxt + (cur ? ("\n\n" + cur) : "");
-    });
-    btnAddPrincipal.addEventListener('click', () => {
-      if (!principalTxt){
-        alert('Clique em "Pré-visualizar principal" antes de adicionar.');
-        return;
-      }
-      const cur = getPreviewAsPlain();
-      previewDiv.textContent = principalTxt + (cur ? ("\n\n" + cur) : "");
-    });
-
-    btnAddOnd.addEventListener('click', ()=> {
-      if (!document.getElementById('selOnd').checked) return;
-      const cur = getPreviewAsPlain();
-      previewDiv.textContent = cur ? (cur + "\n\n" + buildOnd()) : buildOnd();
-    });
-    btnAddPeg.addEventListener('click', ()=> {
-      if (!document.getElementById('selPeg').checked) return;
-      const cur = getPreviewAsPlain();
-      previewDiv.textContent = cur ? (cur + "\n\n" + buildPeg()) : buildPeg();
-    });
-    btnAddCustom.addEventListener('click', ()=>{
-      const t = (document.getElementById('customTxt').value||'').trim();
-      if (!t) return;
-      const cur = getPreviewAsPlain();
-      previewDiv.textContent = cur ? (cur + "\n\n" + t) : t;
-      document.getElementById('customTxt').value='';
-    });
-    btnLimpar.addEventListener('click', ()=> previewDiv.textContent='');
-
-    function setFontSize(px){
-      document.querySelectorAll('.rx-body, #previewRX').forEach(el => el.style.fontSize = px + 'px');
-    }
-    btnCompactar.addEventListener('click', ()=> setFontSize(10));
-    btnExpandir.addEventListener('click', ()=> setFontSize(12));
-
-    btnCopiar.addEventListener('click', async () => {
-      const data = Object.fromEntries(new FormData(document.getElementById('formPront')).entries());
-      const soap = buildSOAP(data);
-      await navigator.clipboard.writeText(soap);
-      alert('Texto SOAP copiado!');
-    });
-
-    function formatDateBR(iso){ if(!iso) return ''; const [y,m,d]=iso.split('-'); return `${d}/${m}/${y}`; }
-
-    function renderViaHTML(viaPrefix, nome, data, blocoPlain){
-      const meta = document.getElementById('meta' + viaPrefix);
-      const body = document.getElementById('body' + viaPrefix);
-      if(!meta || !body) return;
-      meta.textContent = `Paciente: ${nome||''} • Data: ${formatDateBR(data)||''}`;
-      const safe = encodeHTML(blocoPlain);
-      const html = safe.replace(/\n/g, '<br>');
-      body.innerHTML = html;
-    }
-
-    async function prepareAndPrint(){
-      const data = Object.fromEntries(new FormData(document.getElementById('formPront')).entries());
-      const soap = buildSOAP(data);
-      document.getElementById('outSOAP').textContent = soap;
-
-      const blocoPlain = getPreviewAsPlain();
-      renderViaHTML('1', data.nome, data.dataConsulta, blocoPlain || '—');
-      renderViaHTML('2', data.nome, data.dataConsulta, blocoPlain || '—');
-
-      await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
-      setTimeout(()=>window.print(), 60);
-    }
-
-    btnPrint.addEventListener('click', () => {
-      prepareAndPrint().catch(e=>{
-        alert('Falha ao preparar a impressão: ' + (e && e.message ? e.message : e));
-        console.error(e);
-      });
-    });
-  });
-  </script>
+<body>
+<main class='max-w-5xl mx-auto p-6'>
+<h1 class='text-xl font-bold mb-4 text-center'>SannoMed — Gerador SOAP & Receita</h1>
+<section class='card mb-6 no-print'>
+<h2 class='font-semibold mb-2'>Dados do paciente</h2>
+<label>Data: <input type='date' id='dataConsulta' class='input'></label>
+<label>Nome: <input id='nome' class='input' value='LAILA JANAINA'></label>
+<label>Comorbidade: <input id='comorb' class='input' value='Nega'></label>
+<label>Alergias: <input id='alerg' class='input' value='Nega'></label>
+<label>MUC: <input id='muc' class='input' value='Nega'></label>
+<textarea id='soap' class='input' rows='6' placeholder='Texto SOAP'></textarea>
+<button id='btnPrint' class='btn btn-primary mt-3'>Baixar/Imprimir</button>
+</section>
+<section class='card mb-6 no-print'>
+<h2 class='font-semibold mb-2'>Prescrição (editável)</h2>
+<div id='previewRX' class='mono' contenteditable='true' style='border:1px solid #ccc;border-radius:8px;min-height:200px;padding:8px;'>
+</div>
+<button id='btnPreview' class='btn btn-ghost mt-3'>Pré-visualizar Wegovy</button>
+</section>
+<section id='printSOAP' class='print-only'><pre id='outSOAP' class='mono'></pre></section>
+<section id='printRX' class='print-only'>
+<pre id='bodyRX' class='mono'></pre>
+</section>
+</main>
+<script>
+document.getElementById('dataConsulta').value=new Date().toISOString().slice(0,10);
+function buildWegovy(){return `1. Wegovy 2,4mg (Semaglutida) - 1Cx\nAplicar por via subcutânea, 1x por semana, sempre no mesmo dia.\nNa primeira semana aplicar 8 cliques\nNa segunda semana aplicar 8 cliques\nNa terceira semana aplicar 16 cliques\nNa quarta semana aplicar 16 cliques\nNa quinta semana aplicar 32 cliques\nLocal de aplicação cerca de 4 dedos da cicatriz umbilical, alternando os locais de aplicação`; }
+document.getElementById('btnPreview').onclick=()=>{document.getElementById('previewRX').textContent=buildWegovy();};
+document.getElementById('btnPrint').onclick=()=>{
+ let data=document.getElementById('dataConsulta').value.split('-').reverse().join('/');
+ let nome=document.getElementById('nome').value;
+ let soap=`#Data: ${data}\n#Nome: ${nome}\n#Comorbidade: ${document.getElementById('comorb').value}\n#Alergias: ${document.getElementById('alerg').value}\n#MUC: ${document.getElementById('muc').value}\n#S:\n${document.getElementById('soap').value}`;
+ document.getElementById('outSOAP').textContent=soap;
+ document.getElementById('bodyRX').textContent=document.getElementById('previewRX').textContent;
+ setTimeout(()=>window.print(),300);
+};
+</script>
 </body>
 </html>
