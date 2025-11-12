@@ -1,15 +1,8 @@
-# Gerador SOAP — Emagrecimento — v27
-**Correção definitiva do print e das linhas do Wegovy**
+# Gerador SOAP — Emagrecimento — v28
+**Preservação de linhas em branco na impressão**
 
-- Botão **Baixar/Imprimir (2 páginas)** agora:
-  - Preenche SOAP (pág. 1) e as **duas vias** (pág. 2);
-  - **Espera o layout renderizar** (duplo `requestAnimationFrame` + delay) antes de chamar `window.print()`;
-  - Garante **page break** entre as páginas via `.break-after`.
+- A prévia (contenteditable) é lida como **HTML**, convertida com segurança para **texto plano** (div/br → \n, &nbsp; → espaço), e depois **escapada** e **reconvertida para `<br>`** ao imprimir. Isso mantém os **espaços entre medicações** exatamente como digitados.
+- Removido `.trim()` para não apagar linhas em branco internas.
+- Impressão em 2 páginas (SOAP + 2 vias), data dd/mm/aaaa, botões de compactar/expandir fonte.
 
-- Prévia da prescrição usa **textContent** (não `innerText`) para estabilidade de quebras de linha.
-- Wegovy gera automaticamente as linhas com **ordinais pt-BR** (“Na primeira/segunda/…”).
-- Data das vias no formato **dd/mm/aaaa**.
-
-Como salvar em PDF:
-1) Clique **Baixar/Imprimir (2 páginas)**.
-2) Na janela do navegador, escolha **Salvar como PDF**.
+Como salvar em PDF: clique **Baixar/Imprimir (2 páginas)** e selecione **Salvar como PDF**.
