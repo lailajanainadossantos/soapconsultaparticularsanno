@@ -1,8 +1,15 @@
-# Gerador SOAP — Emagrecimento — v25
-Correções principais:
-- **Botão "Baixar/Imprimir (2 páginas)"** aciona corretamente o `window.print()` e preenche as duas páginas.
-- Wegovy agora com linhas **padronizadas**: "Na primeira/segunda/terceira/quarta/quinta semana aplicar X cliques".
-- Mounjaro com formato final estável (sem cliques), conforme solicitado.
-- Prévia da prescrição segue **editável** e é o que vai para a impressão (2 vias).
+# Gerador SOAP — Emagrecimento — v27
+**Correção definitiva do print e das linhas do Wegovy**
 
-Dica: Para salvar em PDF, escolha **Imprimir** e depois **Salvar como PDF** no diálogo do navegador.
+- Botão **Baixar/Imprimir (2 páginas)** agora:
+  - Preenche SOAP (pág. 1) e as **duas vias** (pág. 2);
+  - **Espera o layout renderizar** (duplo `requestAnimationFrame` + delay) antes de chamar `window.print()`;
+  - Garante **page break** entre as páginas via `.break-after`.
+
+- Prévia da prescrição usa **textContent** (não `innerText`) para estabilidade de quebras de linha.
+- Wegovy gera automaticamente as linhas com **ordinais pt-BR** (“Na primeira/segunda/…”).
+- Data das vias no formato **dd/mm/aaaa**.
+
+Como salvar em PDF:
+1) Clique **Baixar/Imprimir (2 páginas)**.
+2) Na janela do navegador, escolha **Salvar como PDF**.

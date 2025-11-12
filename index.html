@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Gerador SOAP — Emagrecimento (v25)</title>
+  <title>Gerador SOAP — Emagrecimento (v27)</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     .card { background:#fff; border-radius:18px; box-shadow: 0 12px 30px rgba(2,6,23,.06); }
@@ -32,6 +32,7 @@
     }
     .print-only { display:none; }
     .grid-2 { display:grid; grid-template-columns: 1fr 1fr; gap:10px; }
+    .break-after { page-break-after: always; }
   </style>
 </head>
 <body class="bg-slate-50 text-slate-900 min-h-screen">
@@ -109,7 +110,7 @@ buscar avaliação médica.</textarea>
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
-          <button type="button" id="btnSalvarImprimir" class="btn btn-primary w-full">Baixar/Imprimir (2 páginas)</button>
+          <button type="button" id="btnPrint" class="btn btn-primary w-full">Baixar/Imprimir (2 páginas)</button>
           <button type="button" id="btnCopiarTexto" class="btn btn-ghost w-full">Copiar SOAP</button>
           <div class="flex gap-2">
             <button type="button" id="btnCompactar" class="btn-sm btn-ghost">Compactar fonte (10 px)</button>
@@ -189,12 +190,12 @@ buscar avaliação médica.</textarea>
     </section>
 
     <!-- PÁGINA 1: somente SOAP -->
-    <section id="printSOAP" class="print-only">
+    <section id="printSOAP" class="print-only break-after">
       <pre id="outSOAP" class="mono"></pre>
     </section>
 
     <!-- PÁGINA 2: RECEITA MÉDICA horizontal, 2 vias lado a lado -->
-    <section id="printRX" class="print-only" style="page-break-before: always;">
+    <section id="printRX" class="print-only">
       <div class="grid-2">
         <div id="rxVia1" class="rx-card">
           <div class="rx-headline">RECEITA MÉDICA — 1ª via</div>
@@ -221,26 +222,25 @@ buscar avaliação médica.</textarea>
   </main>
 
   <script>
+  document.addEventListener('DOMContentLoaded', function(){
     // Auto-data + IMC
-    (function init(){
-      const dataEl = document.getElementById('dataConsulta');
-      const today = new Date();
-      const iso = new Date(today.getTime() - (today.getTimezoneOffset()*60000)).toISOString().slice(0,10);
-      dataEl.value = iso;
-      const peso = document.getElementById('peso');
-      const altura = document.getElementById('altura');
-      function updateIMC(){
-        const p = parseFloat(peso.value); const a = parseFloat(altura.value);
-        let imc = NaN;
-        if (p>0 && a>0) imc = p/(a*a);
-        const text = isFinite(imc) ? imc.toFixed(1) : '—';
-        document.getElementById('imcVal').textContent = text;
-        document.getElementById('imcBadge').textContent = text;
-      }
-      peso.addEventListener('input', updateIMC);
-      altura.addEventListener('input', updateIMC);
-      updateIMC();
-    })();
+    const dataEl = document.getElementById('dataConsulta');
+    const today = new Date();
+    const iso = new Date(today.getTime() - (today.getTimezoneOffset()*60000)).toISOString().slice(0,10);
+    dataEl.value = iso;
+    const peso = document.getElementById('peso');
+    const altura = document.getElementById('altura');
+    function updateIMC(){
+      const p = parseFloat(peso.value); const a = parseFloat(altura.value);
+      let imc = NaN;
+      if (p>0 && a>0) imc = p/(a*a);
+      const text = isFinite(imc) ? imc.toFixed(1) : '—';
+      document.getElementById('imcVal').textContent = text;
+      document.getElementById('imcBadge').textContent = text;
+    }
+    peso.addEventListener('input', updateIMC);
+    altura.addEventListener('input', updateIMC);
+    updateIMC();
 
     function buildSOAP(d){
       return `#Data: ${d.dataConsulta||''}
@@ -257,35 +257,36 @@ ${d.O||''}
 ${d.P||''}`;
     }
 
-    // Helpers campo editável: pegar/definir/append com uma linha em branco entre blocos
-    function getPreview(){ return document.getElementById('previewRX'); }
-    function getPreviewText(){ return getPreview().innerText || ''; }
-    function setPreviewText(t){ getPreview().innerText = t; }
-    function appendBlock(txt){
-      const cur = getPreviewText().trim();
-      const sep = cur ? "\\n\\n" : "";
-      setPreviewText(cur + sep + txt);
-    }
+    // Helpers contenteditable => usar textContent para preservar quebras com estabilidade
+    const previewDiv = document.getElementById('previewRX');
+    const getPrev = () => (previewDiv.textContent || '');
+    const setPrev = (t) => { previewDiv.textContent = t; };
+    const appendBlock = (txt) => {
+      const cur = getPrev().trim();
+      setPrev(cur ? (cur + "\\n\\n" + txt) : txt);
+    };
 
-    // Ordinais pt-BR para "Na primeira/segunda/... semana"
+    // Ordinais pt-BR
     const ORD = ["primeira","segunda","terceira","quarta","quinta","sexta","sétima","oitava","nona","décima"];
 
-    // Modelos de texto (sem divisores) com linhas padronizadas
+    // Modelos padronizados
+    const BASE_CLICK_0_25 = { "wg-0.25":75, "wg-0.5":37, "wg-1.0":19, "wg-1.7":11, "wg-2.4":8 };
+    const LABELS_WG = { "wg-0.25":"0,25mg", "wg-0.5":"0,5mg", "wg-1.0":"1mg", "wg-1.7":"1,7mg", "wg-2.4":"2,4mg" };
+
     function buildWegovy(apres, multStr){
-      const BASE_CLICK_0_25 = { "wg-0.25":75, "wg-0.5":37, "wg-1.0":19, "wg-1.7":11, "wg-2.4":8 };
-      const LABELS_WG = { "wg-0.25":"0,25mg", "wg-0.5":"0,5mg", "wg-1.0":"1mg", "wg-1.7":"1,7mg", "wg-2.4":"2,4mg" };
       const base = BASE_CLICK_0_25[apres];
       const labelDose = LABELS_WG[apres];
       const mults = (multStr||'1,1,2,2,4').split(',').map(s=>parseFloat(s.trim())).filter(n=>!isNaN(n)&&n>0);
-      const weeks = (mults.length?mults:[1,1,2,2,4]).map((m,i)=>{
+      const arr = (mults.length?mults:[1,1,2,2,4]).map((m,i)=>{
         const ord = ORD[i] || `${i+1}ª`;
         return `Na ${ord} semana aplicar ${Math.round(base*m)} cliques`;
       }).join('\\n');
       return `1. Wegovy ${labelDose} (Semaglutida) - 1Cx
 Aplicar por via subcutânea, 1x por semana, sempre no mesmo dia. 
-${weeks}
+${arr}
 Local de aplicação cerca de 4 dedos da cicatriz umbilical, alternando os locais de aplicação`;
     }
+
     function buildMounjaro(label, nDoses){
       const d = (label||'').replace('Mounjaro ','').replace(' mg/dose','').trim();
       const dosePretty = d.replace(' ','');
@@ -294,6 +295,7 @@ Local de aplicação cerca de 4 dedos da cicatriz umbilical, alternando os locai
 Aplicar por via subcutânea, 1x por semana, sempre no mesmo dia (${n} doses) 
 Local de aplicação cerca de 4 dedos da cicatriz umbilical, alternando os locais de aplicação`;
     }
+
     function buildOnd(){
       return `USO ORAL 
 1. Ondansetrona (ondif ou similar) 8mg _ Cx 
@@ -306,9 +308,20 @@ Diluir um sache em um copo de água filtrada e tomar 1x ao dia.
 Aumentar ingesta hídrica e de alimentos ricos em fibra`;
     }
 
-    // Adição via botões
+    // Controles
+    const btnCalc = document.getElementById('btnCalcMask');
+    const btnAdd = document.getElementById('btnAddPrincipal');
+    const btnAddOnd = document.getElementById('btnAddOnd');
+    const btnAddPeg = document.getElementById('btnAddPeg');
+    const btnAddCustom = document.getElementById('btnAddCustom');
+    const btnLimpar = document.getElementById('btnLimparTodos');
+    const btnCompactar = document.getElementById('btnCompactar');
+    const btnExpandir = document.getElementById('btnExpandir');
+    const btnCopiar = document.getElementById('btnCopiarTexto');
+    const btnPrint = document.getElementById('btnPrint');
+
     let principalTxt = '';
-    document.getElementById('btnCalcMask').addEventListener('click', () => {
+    btnCalc.addEventListener('click', () => {
       const medSel = document.getElementById('med').value;
       const apres = document.getElementById('apres').value;
       const mult = document.getElementById('wgMult').value;
@@ -319,62 +332,68 @@ Aumentar ingesta hídrica e de alimentos ricos em fibra`;
         const label = document.getElementById('apres').selectedOptions[0].textContent;
         principalTxt = buildMounjaro(label, nD);
       }
-      const cur = getPreviewText().trim();
-      setPreviewText(principalTxt + (cur ? ('\\n\\n' + cur) : ''));
+      const cur = getPrev().trim();
+      setPrev(principalTxt + (cur ? ('\\n\\n' + cur) : ''));
     });
-    document.getElementById('btnAddPrincipal').addEventListener('click', () => {
+    btnAdd.addEventListener('click', () => {
       if (!principalTxt){ alert('Clique em "Pré-visualizar principal" antes de adicionar.'); return; }
-      const cur = getPreviewText().trim();
-      setPreviewText(principalTxt + (cur ? ('\\n\\n' + cur) : ''));
+      const cur = getPrev().trim();
+      setPrev(principalTxt + (cur ? ('\\n\\n' + cur) : ''));
     });
 
-    document.getElementById('btnAddOnd').addEventListener('click', ()=> appendBlock(buildOnd()));
-    document.getElementById('btnAddPeg').addEventListener('click', ()=> appendBlock(buildPeg()));
-    document.getElementById('btnAddCustom').addEventListener('click', ()=>{
+    btnAddOnd.addEventListener('click', ()=> appendBlock(buildOnd()));
+    btnAddPeg.addEventListener('click', ()=> appendBlock(buildPeg()));
+    btnAddCustom.addEventListener('click', ()=>{
       const t = (document.getElementById('customTxt').value||'').trim();
       if (!t) return;
       appendBlock(t);
       document.getElementById('customTxt').value='';
     });
-    document.getElementById('btnLimparTodos').addEventListener('click', ()=> setPreviewText(''));
+    btnLimpar.addEventListener('click', ()=> setPrev(''));
 
-    // Ajuste de fonte (10px / 12px) na prévia e nas vias
     function setFontSize(px){
       document.querySelectorAll('.rx-body, #previewRX').forEach(el => el.style.fontSize = px + 'px');
     }
-    document.getElementById('btnCompactar').addEventListener('click', ()=> setFontSize(10));
-    document.getElementById('btnExpandir').addEventListener('click', ()=> setFontSize(12));
+    btnCompactar.addEventListener('click', ()=> setFontSize(10));
+    btnExpandir.addEventListener('click', ()=> setFontSize(12));
 
-    // SOAP: copiar e imprimir + data formatada dd/mm/aaaa
-    function formatDateBR(iso){ if(!iso) return ''; const [y,m,d]=iso.split('-'); return `${d}/${m}/${y}`; }
-    const previewSOAP = document.getElementById('previewSOAP');
-    const outSOAP = document.getElementById('outSOAP');
-    const formPront = document.getElementById('formPront');
-    document.getElementById('btnCopiarTexto').addEventListener('click', async () => {
-      const data = Object.fromEntries(new FormData(formPront).entries());
+    btnCopiar.addEventListener('click', async () => {
+      const data = Object.fromEntries(new FormData(document.getElementById('formPront')).entries());
       const soap = buildSOAP(data);
       await navigator.clipboard.writeText(soap);
       alert('Texto SOAP copiado!');
     });
 
+    function formatDateBR(iso){ if(!iso) return ''; const [y,m,d]=iso.split('-'); return `${d}/${m}/${y}`; }
+
     function renderVia(viaPrefix, nome, data, bloco){
-      document.getElementById('meta' + viaPrefix).textContent = `Paciente: ${nome||''} • Data: ${formatDateBR(data)||''}`;
-      document.getElementById('body' + viaPrefix).textContent = bloco;
+      const meta = document.getElementById('meta' + viaPrefix);
+      const body = document.getElementById('body' + viaPrefix);
+      if(!meta || !body) return;
+      meta.textContent = `Paciente: ${nome||''} • Data: ${formatDateBR(data)||''}`;
+      body.textContent = bloco; // mantém quebras
     }
 
-    document.getElementById('btnSalvarImprimir').addEventListener('click', () => {
-      const data = Object.fromEntries(new FormData(formPront).entries());
+    async function prepareAndPrint(){
+      const data = Object.fromEntries(new FormData(document.getElementById('formPront')).entries());
       const soap = buildSOAP(data);
-      previewSOAP.textContent = soap;
-      outSOAP.textContent = soap;
-
-      const blocoRX = getPreviewText().trim() || '—';
+      document.getElementById('outSOAP').textContent = soap;
+      const blocoRX = getPrev().trim() || '—';
       renderVia('1', data.nome, data.dataConsulta, blocoRX);
       renderVia('2', data.nome, data.dataConsulta, blocoRX);
 
-      // Abre o diálogo do navegador para imprimir ou salvar como PDF
-      window.print();
+      // aguarda 2 frames para garantir layout antes do print (corrige intermitências)
+      await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
+      setTimeout(()=>window.print(), 50);
+    }
+
+    btnPrint.addEventListener('click', () => {
+      prepareAndPrint().catch(e=>{
+        alert('Falha ao preparar a impressão: ' + (e && e.message ? e.message : e));
+        console.error(e);
+      });
     });
+  });
   </script>
 </body>
 </html>
