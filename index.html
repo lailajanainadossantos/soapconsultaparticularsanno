@@ -1,94 +1,314 @@
 <!DOCTYPE html>
-<html lang='pt-br'>
+<html lang="pt-br">
 <head>
-<meta charset='utf-8'>
-<meta name='viewport' content='width=device-width, initial-scale=1'>
-<title>Gerador SOAP — Emagrecimento (A4C duas vias)</title>
-<script src='https://cdn.tailwindcss.com'></script>
-<style>
-@media print {
-  @page { size: A4 landscape; margin: 8mm; }
-  .no-print { display:none; }
-  .print-only { display:block; }
-}
-.print-only { display:none; }
-.via { width:49%; border:1px solid #ccc; padding:10px; border-radius:8px; }
-.hdr img { height:40px; }
-.hdr { display:flex; align-items:center; gap:10px; border-bottom:1px solid #ddd; margin-bottom:5px; }
-.footer { font-size:11px; border-top:1px solid #ddd; margin-top:5px; padding-top:5px; }
-</style>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Gerador SOAP — Emagrecimento (Via Única + Prescrição)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root { --brand:#2563eb; --ink:#0f172a; }
+    .card { background:#fff; border-radius:18px; box-shadow: 0 12px 30px rgba(2,6,23,.06); }
+    .label { font-size:12px; color:#334155; font-weight:600; letter-spacing:.02em }
+    .input { width:100%; padding:.7rem .9rem; border:1px solid #e2e8f0; border-radius:12px; }
+    .btn  { padding:.8rem 1rem; border-radius:12px; font-weight:700; }
+    .btn-primary{ background:var(--brand); color:#fff; }
+    .btn-ghost { border:1px solid #e2e8f0; background:#fff; }
+    .mono { white-space:pre-wrap; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size: 13px; line-height:1.35 }
+    .kpi { display:flex; align-items:center; gap:8px; border:1px solid #e2e8f0; padding:.6rem .8rem; border-radius:12px; }
+    @media print {
+      @page { size: A4 portrait; margin: 14mm; }
+      .no-print { display:none !important; }
+      .print-only { display:block !important; }
+    }
+    .print-only { display:none; }
+    .note { font-size:12px; color:#64748b; }
+  </style>
 </head>
-<body class='bg-slate-50 text-slate-900 min-h-screen'>
-<main class='max-w-7xl mx-auto p-6'>
-<header class='no-print flex justify-between items-center mb-4'>
-<h1 class='text-xl font-bold'>Gerador SOAP — Consulta de Emagrecimento</h1>
-<div class='text-sm text-slate-500'>A4 horizontal • Duas vias</div>
-</header>
+<body class="bg-slate-50 text-slate-900 min-h-screen">
+  <main class="max-w-6xl mx-auto p-6">
+    <header class="no-print mb-6 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <img src="./logo.png" class="w-9 h-9 rounded-lg ring-1 ring-slate-200" alt="SannoMed">
+        <div>
+          <h1 class="text-2xl font-bold tracking-tight">Gerador SOAP — Emagrecimento</h1>
+          <p class="text-xs text-slate-500">Via única (A4 retrato) + máscara de prescrição (Wegovy/Mounjaro)</p>
+        </div>
+      </div>
+      <div class="hidden md:flex gap-2">
+        <span class="kpi text-sm"><strong>IMC:</strong> <span id="imcVal">—</span></span>
+      </div>
+    </header>
 
-<section class='no-print'>
-<form id='form' class='bg-white p-5 rounded-xl shadow space-y-3'>
-<label>Data <input name='data' type='date' class='border rounded w-full p-1'></label>
-<label>Peso (kg) <input name='peso' type='number' step='0.1' class='border rounded w-full p-1'></label>
-<label>Altura (m) <input name='altura' type='number' step='0.01' class='border rounded w-full p-1'></label>
-<label>Comorbidades <input name='comorbidades' class='border rounded w-full p-1' placeholder='NEGA ou descrever'></label>
-<label>Alergias <input name='alergias' class='border rounded w-full p-1' placeholder='NEGA ou descrever'></label>
-<label>Medicações em uso <input name='medicacoes' class='border rounded w-full p-1'></label>
-<label>HMP <input name='hmp' class='border rounded w-full p-1'></label>
-<label>Motivação <input name='motivacao' class='border rounded w-full p-1'></label>
-<label>História <textarea name='historia' class='border rounded w-full p-1'></textarea></label>
-<label>Exame físico <textarea name='exame' class='border rounded w-full p-1'></textarea></label>
-<label>Avaliação <textarea name='avaliacao' class='border rounded w-full p-1'></textarea></label>
-<label>Plano <textarea name='plano' class='border rounded w-full p-1'></textarea></label>
-<label>Prescrição <textarea name='prescricao' class='border rounded w-full p-1'></textarea></label>
-<button type='button' id='gerar' class='bg-blue-600 text-white rounded p-2 w-full mt-2'>Gerar PDF (duas vias)</button>
-</form>
-</section>
+    <!-- Bloco 1: Via única do prontuário -->
+    <section class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <form id="formPront" class="card p-6 space-y-5">
+        <h2 class="text-lg font-semibold">Prontuário — Via única</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <label class="label">#Data automática
+            <input type="date" name="dataConsulta" id="dataConsulta" class="input">
+          </label>
+          <label class="label">#Nome do paciente
+            <input name="nome" class="input" placeholder="Nome completo">
+          </label>
+        </div>
 
-<section id='print-area' class='print-only'>
-<div style='display:flex;justify-content:space-between;gap:8px'>
-<div class='via'>
-<div class='hdr'><img src='./logo.png'><h2>Consulta de Emagrecimento — Prontuário SOAP</h2></div>
-<pre id='via1'></pre>
-<div class='footer'>
-Dra. Laila Janaína dos Santos — CRM-SC 38237<br>
-SannoMed Clínica Integrada | Rua Otto Júlio Malina, 671<br>
-Tel: (48) 3034-3735 | contato@sannomed.com.br
-</div>
-</div>
-<div class='via'>
-<div class='hdr'><img src='./logo.png'><h2>Consulta de Emagrecimento — Prontuário SOAP</h2></div>
-<pre id='via2'></pre>
-<div class='footer'>
-Dra. Laila Janaína dos Santos — CRM-SC 38237<br>
-SannoMed Clínica Integrada | Rua Otto Júlio Malina, 671<br>
-Tel: (48) 3034-3735 | contato@sannomed.com.br
-</div>
-</div>
-</div>
-</section>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <label class="label">Peso (kg)
+            <input type="number" step="0.1" name="peso" id="peso" class="input" placeholder="84.5">
+          </label>
+          <label class="label">Altura (m)
+            <input type="number" step="0.01" name="altura" id="altura" class="input" placeholder="1.67">
+          </label>
+          <div class="label">IMC
+            <div class="input bg-slate-50"><span id="imcBadge">—</span></div>
+          </div>
+        </div>
 
-<script>
-document.getElementById('gerar').onclick = function() {
-  const data = Object.fromEntries(new FormData(document.getElementById('form')).entries());
-  let text = `#Comorbidades: ${data.comorbidades}
-#Alergias: ${data.alergias}
-#Medicações: ${data.medicacoes}
-#Peso: ${data.peso} | #Altura: ${data.altura}
-#HMP: ${data.hmp}
-#Motivação: ${data.motivacao}
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <label class="label">#Comorbidade
+            <input name="comorbidade" class="input" placeholder="NEGA ou descrever">
+          </label>
+          <label class="label">#Alergias
+            <input name="alergias" class="input" placeholder="NEGA ou descrever">
+          </label>
+          <label class="label sm:col-span-2">#MUC
+            <input name="muc" class="input" placeholder="Medicações em uso correntes">
+          </label>
+        </div>
 
-#S: ${data.historia}
-#O: ${data.exame}
-#A: ${data.avaliacao}
-#P: ${data.plano}
+        <div class="grid grid-cols-1 gap-3">
+          <label class="label">#S:
+            <textarea name="S" rows="5" class="input" placeholder="Queixa, história dirigida, hábitos (ingesta hídrica, padrão alimentar, atividade física, sono), motivação, trabalho, com quem mora..."></textarea>
+          </label>
+          <label class="label">#O:
+            <textarea name="O" rows="4" class="input">BEG, LOC, AAA
+AC: RCR 2T BNF SS | AP: MV+ bilat., sem ruídos adventícios
+Abdome: RHA+, depressível, sem dor
+Neuro: sem déficits focais</textarea>
+          </label>
+          <label class="label">#P:
+            <textarea name="P" rows="6" class="input">Prescrevo.
+Oriento prática regular de atividade física. Evitar jejum prolongado e bebidas açucaradas e aumentar ingesta hídrica.
+Explico sobre fisiologia dos medicamentos, explico sobre possíveis efeitos colaterais associados.
+Alerto sobre sinais de alarme: dor abdominal intensa, náuseas persistentes, vômitos, icterícia, palpitações, hipotensão, hipoglicemia — se presentes, buscar avaliação médica.</textarea>
+          </label>
+        </div>
 
-Prescrição:
-${data.prescricao}`;
-  document.getElementById('via1').textContent = text;
-  document.getElementById('via2').textContent = text;
-  window.print();
-};
-</script>
-</main>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+          <button type="button" id="btnGerarViaUnica" class="btn btn-primary w-full">Salvar & Gerar via única (PDF)</button>
+          <button type="button" id="btnCopiarTexto" class="btn btn-ghost w-full">Copiar texto</button>
+        </div>
+      </form>
+
+      <div class="card p-6">
+        <h3 class="text-lg font-semibold mb-2">Pré-visualização (via única)</h3>
+        <pre id="previewSOAP" class="mono min-h-[360px] p-3 border border-slate-200 rounded-xl">Preencha os campos e clique em “Salvar & Gerar via única (PDF)”.</pre>
+      </div>
+    </section>
+
+    <!-- Bloco 2: Máscara de prescrição (Wegovy / Mounjaro) -->
+    <section class="mt-8 card p-6 space-y-4 no-print">
+      <h2 class="text-lg font-semibold">Máscara de Prescrição</h2>
+      <div class="grid grid-cols-1 md:grid-cols-6 gap-3">
+        <label class="label">Medicamento
+          <select id="med" class="input">
+            <option value="wegovy">Wegovy (semaglutida)</option>
+            <option value="mounjaro">Mounjaro (tirzepatida)</option>
+          </select>
+        </label>
+        <label class="label">Apresentação
+          <select id="apres" class="input">
+            <option value="wg-0.25">Wegovy 0,25 mg (pen)</option>
+            <option value="wg-0.5">Wegovy 0,5 mg (pen)</option>
+            <option value="wg-1.0">Wegovy 1 mg (pen)</option>
+            <option value="wg-1.7">Wegovy 1,7 mg (pen)</option>
+            <option value="wg-2.4">Wegovy 2,4 mg (pen)</option>
+            <option value="mj-2.5">Mounjaro 2,5 mg/dose</option>
+            <option value="mj-5">Mounjaro 5 mg/dose</option>
+            <option value="mj-7.5">Mounjaro 7,5 mg/dose</option>
+            <option value="mj-10">Mounjaro 10 mg/dose</option>
+          </select>
+        </label>
+        <label class="label">Dose/sem (mg)
+          <input type="number" step="0.05" id="doseSem" class="input" placeholder="ex.: 0.5">
+        </label>
+        <label class="label">Nº de doses (semanas)
+          <input type="number" min="1" step="1" id="nDoses" value="4" class="input">
+        </label>
+        <label class="label">Multiplicadores Wegovy
+          <input id="wgMult" class="input" value="1,1,2,2,4">
+          <div class="note">Ex.: 1,1,2,2,4 → semanas com 1×,1×,2×,2×,4× os cliques-base</div>
+        </label>
+        <div class="label">Resultado
+          <div id="resultadoMask" class="input bg-slate-50">—</div>
+        </div>
+      </div>
+      <div class="flex gap-3">
+        <button type="button" id="btnCalcMask" class="btn btn-primary">Calcular cliques/dose</button>
+        <button type="button" id="btnAddPresc" class="btn btn-ghost">Adicionar ao texto</button>
+      </div>
+      <details class="text-sm">
+        <summary class="cursor-pointer font-medium">Tabela de referência (cliques)</summary>
+        <div class="mt-2 overflow-x-auto border rounded-xl">
+          <table class="w-full text-sm">
+            <thead class="bg-slate-100">
+              <tr><th class="p-2 text-left">DOSE</th><th class="p-2 text-left">VOLUME</th><th class="p-2 text-left">PROPORÇÃO</th></tr>
+            </thead>
+            <tbody>
+              <tr><td class="p-2">WEGOVY 0,25 mg</td><td class="p-2">1,5 mL</td><td class="p-2">37 cliques — caneta 0,25 mg</td></tr>
+              <tr class="bg-slate-50"><td class="p-2">WEGOVY 0,5 mg</td><td class="p-2">1,5 mL</td><td class="p-2">19 cliques — caneta 0,25 mg</td></tr>
+              <tr><td class="p-2">WEGOVY 1 mg</td><td class="p-2">3 mL</td><td class="p-2">19 cliques — caneta 0,25 mg</td></tr>
+              <tr class="bg-slate-50"><td class="p-2">WEGOVY 1,7 mg</td><td class="p-2">3 mL</td><td class="p-2">11 cliques — caneta 0,25 mg</td></tr>
+              <tr><td class="p-2">WEGOVY 2,4 mg</td><td class="p-2">3 mL</td><td class="p-2">8 cliques — caneta 0,25 mg</td></tr>
+              <tr class="bg-slate-50"><td class="p-2">MOUNJARO 2,5 / 5 / 7,5 / 10 mg</td><td class="p-2">—</td><td class="p-2">1 ampola = 1 dose</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
+    </section>
+
+    <!-- Área de impressão: via única -->
+    <section id="printArea" class="print-only">
+      <div class="flex items-start gap-4">
+        <img src="./logo.png" alt="SannoMed" style="height:56px">
+        <div>
+          <h2 style="margin:0;font-weight:800;">Consulta de Emagrecimento — Via única (SOAP)</h2>
+          <div style="font-size:12px;color:#334155">
+            Dra. Laila Janaína dos Santos — CRM-SC 38237 • SannoMed Clínica Integrada • Rua Otto Júlio Malina, 671 • Tel: (48) 3034-3735 • contato@sannomed.com.br
+          </div>
+        </div>
+      </div>
+      <pre id="outPrint" class="mono" style="margin-top:8px"></pre>
+    </section>
+  </main>
+
+  <script>
+    // Auto-data + IMC
+    (function init(){
+      const dataEl = document.getElementById('dataConsulta');
+      const today = new Date();
+      const iso = new Date(today.getTime() - (today.getTimezoneOffset()*60000)).toISOString().slice(0,10);
+      dataEl.value = iso;
+      const peso = document.getElementById('peso');
+      const altura = document.getElementById('altura');
+      function updateIMC(){
+        const p = parseFloat(peso.value); const a = parseFloat(altura.value);
+        let imc = NaN;
+        if (p>0 && a>0) imc = p/(a*a);
+        const text = isFinite(imc) ? imc.toFixed(1) : '—';
+        document.getElementById('imcVal').textContent = text;
+        document.getElementById('imcBadge').textContent = text;
+      }
+      peso.addEventListener('input', updateIMC);
+      altura.addEventListener('input', updateIMC);
+      updateIMC();
+    })();
+
+    // Construção do texto SOAP via única
+    function formToObj(form){ return Object.fromEntries(new FormData(form).entries()); }
+    function buildViaUnica(d){
+      return `#Data: ${d.dataConsulta||''}
+#Nome do paciente: ${d.nome||''}
+#Comorbidade: ${d.comorbidade||'NEGA'}
+#Alergias: ${d.alergias||'NEGA'}
+#MUC: ${d.muc||''}
+#Peso: ${d.peso||''} | #Altura: ${d.altura||''} | #IMC: ${(d.peso&&d.altura)?(parseFloat(d.peso)/(parseFloat(d.altura)**2)).toFixed(1):''}
+
+#S:
+${d.S||''}
+
+#O:
+${d.O||''}
+
+#P:
+${d.P||''}`;
+    }
+
+    const formPront = document.getElementById('formPront');
+    const preview = document.getElementById('previewSOAP');
+    const outPrint = document.getElementById('outPrint');
+
+    document.getElementById('btnGerarViaUnica').addEventListener('click', () => {
+      const data = formToObj(formPront);
+      const texto = buildViaUnica(data);
+      preview.textContent = texto;
+      outPrint.textContent = texto;
+      window.print();
+    });
+    document.getElementById('btnCopiarTexto').addEventListener('click', async () => {
+      const txt = preview.textContent.trim();
+      if (!txt) return alert('Gere a via única primeiro.');
+      await navigator.clipboard.writeText(txt);
+      alert('Texto copiado!');
+    });
+
+    // Máscara de prescrição — cálculo de cliques
+    const BASE_CLICK_0_25 = { "wg-0.25":75, "wg-0.5":37, "wg-1.0":19, "wg-1.7":11, "wg-2.4":8 };
+    const LABELS_WG = { "wg-0.25":"0,25mg", "wg-0.5":"0,5mg", "wg-1.0":"1mg", "wg-1.7":"1,7mg", "wg-2.4":"2,4mg" };
+
+    function buildWegovyText(apres, multipliersStr){
+      const baseClicks = BASE_CLICK_0_25[apres];
+      const labelDose = LABELS_WG[apres] || "";
+      let lines = [];
+      const mults = (multipliersStr||"").split(",").map(s=>parseFloat(s.trim())).filter(n=>!isNaN(n) && n>0);
+      if (mults.length===0){ lines = [1,1,2,2,4]; } else { lines = mults; }
+      const weeks = lines.map((m,i)=>`Na semana ${i+1} aplicar ${Math.round(baseClicks*m)} cliques`).join("\n");
+      return `USO SUBCUTÂNEO
+1. Wegovy ${labelDose} (Semaglutida) - 1Cx
+Aplicar por via subcutânea, 1x por semana, sempre no mesmo dia. 
+${weeks}
+Local de aplicação cerca de 4 dedos da cicatriz umbilical, alternando os locais de aplicação`;
+    }
+
+    function buildMounjaroText(labelDose, nDoses){
+      const d = (labelDose || '').replace('Mounjaro ','').replace(' mg/dose','').trim();
+      const dosePretty = d.replace(' ','');
+      const n = Math.max(1, parseInt(nDoses||'4',10));
+      return `USO SUBCUTÂNEO
+1. Mounjaro ${dosePretty}mg - 1CX
+Aplicar por via subcutânea, 1x por semana, sempre no mesmo dia (${n} doses) 
+Local de aplicação cerca de 4 dedos da cicatriz umbilical, alternando os locais de aplicação`;
+    }
+
+    function calcMask(){
+      const med = document.getElementById('med').value;
+      const apres = document.getElementById('apres').value;
+      const dose = parseFloat(document.getElementById('doseSem').value||'0');
+      const nDoses = document.getElementById('nDoses').value;
+      const wgMult = document.getElementById('wgMult').value;
+      let result = '—';
+      let longText = '';
+
+      if (med === 'wegovy'){
+        const base = BASE_CLICK_0_25[apres];
+        if (!base){ result = 'Apresentação inválida'; }
+        else {
+          // Mantemos o cálculo resumido proporcional à dose para exibir na caixa de resultado
+          if (!dose || dose<=0){ result = 'Informe uma dose/semana válida'; }
+          else {
+            const clicks = Math.round(base * (dose / 0.25));
+            result = `${clicks} cliques/semana (dose ${dose.toFixed(2)} mg)`;
+          }
+          longText = buildWegovyText(apres, wgMult);
+        }
+      } else {
+        const label = document.getElementById('apres').selectedOptions[0].textContent; // ex.: "Mounjaro 2,5 mg/dose"
+        result = `1 seringa por semana (${label.replace('Mounjaro ','')})`;
+        longText = buildMounjaroText(label, nDoses);
+      }
+
+      document.getElementById('resultadoMask').textContent = result;
+      return { result, longText };
+    }
+    document.getElementById('btnCalcMask').addEventListener('click', () => { calcMask(); });
+    document.getElementById('btnAddPresc').addEventListener('click', () => {
+      const { longText } = calcMask();
+      if (!longText){ alert('Calcule primeiro a dose.'); return; }
+      const cur = preview.textContent || '';
+      const block = (cur ? cur + "\n\n" : "") + longText;
+      preview.textContent = block;
+      outPrint.textContent = block;
+    });
+  </script>
 </body>
 </html>
