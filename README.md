@@ -1,13 +1,13 @@
-# Gerador SOAP — Emagrecimento — v14
+# Gerador SOAP — Emagrecimento — v15
 
-**Correções e melhorias:**
-- Substituída a logo pelo arquivo que você enviou (SannoMed).
-- **Título "RECEITA MÉDICA"** no topo de cada via.
-- **Prescrição em horizontal (A4 landscape)** na impressão (ambas as páginas saem em landscape para garantir compatibilidade).
-- Mantém 2 vias **lado a lado**, cada uma com: logo, Paciente, Data, itens selecionados, **assinatura centralizada** e rodapé.
+**Novidades pedidas:**
+- Botões **“Adicionar”** ao lado de **Ondansetrona**, **PEG-Lax** e **Item avulso**, que já vão **aparecendo na prévia** e compõem a prescrição final.
+- Cabeçalho das vias: **“RECEITA MÉDICA — 1ª via”** e **“RECEITA MÉDICA — 2ª via”**.
+- **Ajuste de espaçamento automático**: as vias são flexíveis (min-height ~185mm) e a assinatura fica **sempre alinhada ao rodapé**; o corpo da prescrição cresce para **preencher a página**, evitando “buraco” grande em branco.
 
-Mantém também:
-- Página 1 = SOAP puro.
-- Seletor de medicações (principal Wegovy/Mounjaro; Ondansetrona; PEG-Lax; itens avulsos).
+**Fluxo:**
+1) Monte o medicamento principal (pré-visualizar → **Adicionar principal**).
+2) Use os botões **+ Adicionar Ondansetrona**, **+ Adicionar PEG-Lax** e **+ Adicionar** avulsos para compor a receita.
+3) **Salvar & Imprimir**: Página 1 (SOAP) | Página 2 (2 vias lado a lado, horizontal).
 
-Se quiser deixar a página 1 (SOAP) em retrato e apenas a página 2 em paisagem, posso montar uma variante usando CSS Paged Media específico. Alguns navegadores não suportam bem, mas posso tentar.
+Se quiser, adiciono um botão “Compactar fonte (10px)” para casos extremos de conteúdo muito longo.
