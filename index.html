@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Gerador SOAP — Emagrecimento (v21)</title>
+  <title>Gerador SOAP — Emagrecimento (v22)</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     .card { background:#fff; border-radius:18px; box-shadow: 0 12px 30px rgba(2,6,23,.06); }
@@ -30,6 +30,8 @@
     }
     .print-only { display:none; }
     .grid-2 { display:grid; grid-template-columns: 1fr 1fr; gap:10px; }
+    .editable { min-height: 180px; border: 1px solid #e2e8f0; border-radius: 12px; padding: .75rem .9rem; outline: none; }
+    .editable:empty:before { content: attr(data-placeholder); color: #94a3b8; }
   </style>
 </head>
 <body class="bg-slate-50 text-slate-900 min-h-screen">
@@ -118,22 +120,10 @@ buscar avaliação médica.</textarea>
 
       <div class="card p-6 space-y-4">
         <div>
-          <h3 class="text-lg font-semibold mb-2">Pré-visualização SOAP</h3>
-          <pre id="previewSOAP" class="mono min-h-[160px] p-3 border border-slate-200 rounded-xl">Preencha e clique em “Salvar & Imprimir”.</pre>
-        </div>
-        <div>
-          <h3 class="text-lg font-semibold mb-2">Prescrição (prévia)</h3>
-          <pre id="previewRX" class="mono min-h-[120px] p-3 border border-slate-200 rounded-xl">Monte a prescrição com os botões. Você pode editar manualmente abaixo e optar por usar a edição ao imprimir.</pre>
-          <label class="label">Edição manual da prescrição (opcional)
-            <textarea id="manualRX" rows="10" class="input mono" placeholder="Cole/edite aqui a prescrição com divisores."></textarea>
-          </label>
-          <div class="flex flex-wrap items-center gap-2">
-            <button type="button" id="btnCarregarPrev" class="btn-sm btn-ghost">Carregar texto da prévia</button>
-            <label class="flex items-center gap-2 text-sm">
-              <input type="checkbox" id="useManual" class="accent-blue-600">
-              Usar edição manual ao imprimir
-            </label>
-          </div>
+          <h3 class="text-lg font-semibold mb-2">Prescrição (prévia) — <span class="text-slate-500">editável</span></h3>
+          <div id="previewRX" class="mono editable" contenteditable="true"
+               data-placeholder="Monte pelos botões ou digite/cole aqui. Este conteúdo será usado na impressão."></div>
+          <div class="text-xs text-slate-500 mt-1">Dica: Enter para nova linha; cole seu texto com divisores se preferir.</div>
         </div>
       </div>
     </section>
@@ -304,28 +294,29 @@ Diluir um sache em um copo de água filtrada e tomar 1x ao dia.
 Aumentar ingesta hídrica e de alimentos ricos em fibra`;
     }
 
-    // Estado
-    let principalTxt = '';
-    let blocks = [];
-    function joinBlocks(blks){ return blks.join(DIVISOR).trim(); }
-    function updatePreviewRX(){
-      const txt = joinBlocks(blocks) || '—';
-      document.getElementById('previewRX').textContent = txt;
+    // Helpers para a prévia editável
+    function getPreview(){ return document.getElementById('previewRX'); }
+    function getPreviewText(){ return getPreview().innerText || ''; }
+    function setPreviewText(t){ getPreview().innerText = t; }
+    function appendBlock(txt){
+      const cur = getPreviewText().trim();
+      const next = cur ? (cur + DIVISOR + txt) : txt;
+      setPreviewText(next);
     }
 
     // Botões adicionar
-    document.getElementById('btnAddOnd').addEventListener('click', ()=>{ blocks.push(buildOnd()); updatePreviewRX(); });
-    document.getElementById('btnAddPeg').addEventListener('click', ()=>{ blocks.push(buildPeg()); updatePreviewRX(); });
+    document.getElementById('btnAddOnd').addEventListener('click', ()=> appendBlock(buildOnd()));
+    document.getElementById('btnAddPeg').addEventListener('click', ()=> appendBlock(buildPeg()));
     document.getElementById('btnAddCustom').addEventListener('click', ()=>{
       const t = (document.getElementById('customTxt').value||'').trim();
       if (!t) return;
-      blocks.push(t);
+      appendBlock(t);
       document.getElementById('customTxt').value='';
-      updatePreviewRX();
     });
-    document.getElementById('btnLimparTodos').addEventListener('click', ()=>{ blocks = []; updatePreviewRX(); });
+    document.getElementById('btnLimparTodos').addEventListener('click', ()=> setPreviewText(''));
 
     // Principal (pré-visualizar e adicionar)
+    let principalTxt = '';
     document.getElementById('btnCalcMask').addEventListener('click', () => {
       const medSel = document.getElementById('med').value;
       const apres = document.getElementById('apres').value;
@@ -337,28 +328,25 @@ Aumentar ingesta hídrica e de alimentos ricos em fibra`;
         const label = document.getElementById('apres').selectedOptions[0].textContent;
         principalTxt = buildMounjaro(label, nD);
       }
-      document.getElementById('previewRX').textContent = principalTxt;
+      // Mostra o principal no topo da prévia (não fixa)
+      const cur = getPreviewText().trim();
+      setPreviewText(principalTxt + (cur ? (DIVISOR + cur) : ''));
     });
     document.getElementById('btnAddPrincipal').addEventListener('click', () => {
-      if (!principalTxt){ alert('Clique em \"Pré-visualizar principal\" antes de adicionar.'); return; }
-      blocks.unshift(principalTxt);
-      updatePreviewRX();
+      if (!principalTxt){ alert('Clique em "Pré-visualizar principal" antes de adicionar.'); return; }
+      const cur = getPreviewText().trim();
+      const next = principalTxt + (cur ? (DIVISOR + cur) : '');
+      setPreviewText(next);
     });
 
-    // Edição manual
-    document.getElementById('btnCarregarPrev').addEventListener('click', ()=>{
-      const t = document.getElementById('previewRX').textContent || '';
-      document.getElementById('manualRX').value = t;
-    });
-
-    // Ajuste de fonte (10px / 12px) nas vias e nas prévias
+    // Ajuste de fonte (10px / 12px) nas vias e na prévia editável
     function setFontSize(px){
-      document.querySelectorAll('.rx-body, #previewRX, #manualRX').forEach(el => el.style.fontSize = px + 'px');
+      document.querySelectorAll('.rx-body, #previewRX').forEach(el => el.style.fontSize = px + 'px');
     }
     document.getElementById('btnCompactar').addEventListener('click', ()=> setFontSize(10));
     document.getElementById('btnExpandir').addEventListener('click', ()=> setFontSize(12));
 
-    // Copiar SOAP e imprimir
+    // SOAP: copiar e imprimir
     const previewSOAP = document.getElementById('previewSOAP');
     const outSOAP = document.getElementById('outSOAP');
     const formPront = document.getElementById('formPront');
@@ -380,10 +368,7 @@ Aumentar ingesta hídrica e de alimentos ricos em fibra`;
       previewSOAP.textContent = soap;
       outSOAP.textContent = soap;
 
-      const useManual = document.getElementById('useManual').checked;
-      const manual = (document.getElementById('manualRX').value||'').trim();
-      const blocoRX = useManual && manual ? manual : (joinBlocks(blocks) || '—');
-
+      const blocoRX = getPreviewText().trim() || '—';
       renderVia('1', data.nome, data.dataConsulta, blocoRX);
       renderVia('2', data.nome, data.dataConsulta, blocoRX);
 

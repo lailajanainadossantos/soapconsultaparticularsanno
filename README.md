@@ -1,3 +1,5 @@
-# Gerador SOAP — Emagrecimento — v21 (FINAL)
-- Corrige erro da v20: agora o HTML é o **app completo** (não é placeholder).
-- Mantém tudo que combinamos: SOAP (pág. 1), receita horizontal 2 vias (pág. 2), **divisores**, **edição manual**, e **botões menores**.
+# Gerador SOAP — Emagrecimento — v22
+**Mudança principal**: a **Prescrição (prévia)** agora é **editável diretamente**, sem bloco separado.
+- Os botões adicionam texto **no próprio campo editável** com divisores.
+- A **impressão usa exatamente o conteúdo** que estiver na prévia.
+- Botões de fonte menores preservados; 2 vias horizontais na página 2.
