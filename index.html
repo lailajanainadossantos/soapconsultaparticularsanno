@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>SannoMed — Gerador SOAP & Receita (v31)</title>
+  <title>SannoMed — Gerador SOAP & Receita (v32)</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     :root { --brand:#0ea5e9; --ink:#0f172a; }
@@ -63,7 +63,6 @@
       </div>
     </header>
 
-    <!-- Form + preview (não imprime) -->
     <section class="grid grid-cols-1 lg:grid-cols-2 gap-6 no-print">
       <form id="formPront" class="card p-6 space-y-5">
         <h2 class="text-lg font-semibold">Prontuário — Via única</h2>
@@ -142,11 +141,9 @@ buscar avaliação médica.</textarea>
       </div>
     </section>
 
-    <!-- Montagem da prescrição (não imprime) -->
     <section class="mt-8 card p-6 space-y-5 no-print">
       <h2 class="text-lg font-semibold">Selecionar medicações</h2>
 
-      <!-- Grupo Wegovy/Mounjaro -->
       <div class="grid grid-cols-1 md:grid-cols-7 gap-3">
         <div class="label">Principal</div>
         <label class="chip"><input type="radio" name="principal" value="wegovy" checked> Wegovy</label>
@@ -188,7 +185,6 @@ buscar avaliação médica.</textarea>
 
       <hr/>
 
-      <!-- Seletores simples com botão Adicionar ao lado -->
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div class="flex items-center gap-2">
           <input type="checkbox" id="selOnd">
@@ -211,7 +207,6 @@ buscar avaliação médica.</textarea>
       </div>
     </section>
 
-    <!-- PÁGINA 1: SOAP com branding -->
     <section id="printSOAP" class="print-only break-after">
       <div class="brand-print brand-bar">
         <img src="./logo.png" class="h-10 w-auto" alt="SannoMed">
@@ -223,7 +218,6 @@ buscar avaliação médica.</textarea>
       <pre id="outSOAP" class="mono"></pre>
     </section>
 
-    <!-- PÁGINA 2: RECEITA horizontal, 2 vias lado a lado -->
     <section id="printRX" class="print-only">
       <div class="grid-2">
         <div id="rxVia1" class="rx-card">
@@ -254,7 +248,6 @@ buscar avaliação médica.</textarea>
 
   <script>
   document.addEventListener('DOMContentLoaded', function(){
-    // Auto-data + IMC
     const dataEl = document.getElementById('dataConsulta');
     const today = new Date();
     const iso = new Date(today.getTime() - (today.getTimezoneOffset()*60000)).toISOString().slice(0,10);
@@ -288,27 +281,33 @@ ${d.O||''}
 ${d.P||''}`;
     }
 
-    // ====== captura fiel do contenteditable preservando linhas em branco ======
     const previewDiv = document.getElementById('previewRX');
     function getPreviewAsPlain(){
       let html = previewDiv.innerHTML;
       html = html
-        .replace(/\r\n/g, '\n')
+        .replace(/
+/g, '
+')
         .replace(/&nbsp;/g, ' ')
-        .replace(/<div><br\s*\/?><\/div>/gi, '\n\n')
-        .replace(/<br\s*\/?>(?=\s*<br\s*\/?>(\s|\n|\r)*)/gi, '<br><br>')
-        .replace(/<br\s*\/?>(?!\n)/gi, '\n')
-        .replace(/<\/div>\s*<div>/gi, '\n')
+        .replace(/<div><br\s*\/?><\/div>/gi, '
+
+')
+        .replace(/<br\s*\/?>(?=\s*<br\s*\/?>(\s|
+|)*)/gi, '<br><br>')
+        .replace(/<br\s*\/?>(?!
+)/gi, '
+')
+        .replace(/<\/div>\s*<div>/gi, '
+')
         .replace(/<div>/gi, '')
         .replace(/<\/div>/gi, '');
       html = html.replace(/<[^>]+>/g, '');
-      return html.replace(/\s+$/,''); // preserva quebras internas
+      return html.replace(/\s+$/,''); 
     }
     function encodeHTML(s){
       return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
     }
 
-    // ====== Montagem Wegovy/Mounjaro ======
     const ORD = ["primeira","segunda","terceira","quarta","quinta","sexta","sétima","oitava","nona","décima"];
     const BASE_CLICK_0_25 = { "wg-0.25":75, "wg-0.5":37, "wg-1.0":19, "wg-1.7":11, "wg-2.4":8 };
     const LABELS_WG = { "wg-0.25":"0,25mg", "wg-0.5":"0,5mg", "wg-1.0":"1mg", "wg-1.7":"1,7mg", "wg-2.4":"2,4mg" };
@@ -347,7 +346,6 @@ Diluir um sache em um copo de água filtrada e tomar 1x ao dia.
 Aumentar ingesta hídrica e de alimentos ricos em fibra`;
     }
 
-    // ====== botões e seletores ======
     const btnPreviewPrincipal = document.getElementById('btnPreviewPrincipal');
     const btnAddPrincipal = document.getElementById('btnAddPrincipal');
     const btnAddOnd = document.getElementById('btnAddOnd');
@@ -378,7 +376,10 @@ Aumentar ingesta hídrica e de alimentos ricos em fibra`;
       previewDiv.textContent = principalTxt + (cur ? ("\n\n" + cur) : "");
     });
     btnAddPrincipal.addEventListener('click', () => {
-      if (!principalTxt){ alert('Clique em "Pré-visualizar principal" antes de adicionar."); return; }
+      if (!principalTxt){
+        alert('Clique em "Pré-visualizar principal" antes de adicionar.');
+        return;
+      }
       const cur = getPreviewAsPlain();
       previewDiv.textContent = principalTxt + (cur ? ("\n\n" + cur) : "");
     });
@@ -436,7 +437,6 @@ Aumentar ingesta hídrica e de alimentos ricos em fibra`;
       renderViaHTML('1', data.nome, data.dataConsulta, blocoPlain || '—');
       renderViaHTML('2', data.nome, data.dataConsulta, blocoPlain || '—');
 
-      // aguarda layout assentar e imprime 2 páginas
       await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
       setTimeout(()=>window.print(), 60);
     }
