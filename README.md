@@ -1,14 +1,20 @@
-# Gerador SOAP — Emagrecimento — v9
+# Gerador SOAP — Emagrecimento — v13
 
-**Novo:** Ao salvar/imprimir, é gerada **apenas uma via única** contendo:
-1) **SOAP completo** no topo (no formato que você exemplificou)
-2) **Prescrição** abaixo (uma única via), preenchida pela máscara
+**Novidade: seleção de medicações para a página 2 (duas vias lado a lado)**
 
-Para a prescrição:
-- Wegovy → multiplicadores editáveis (ex.: 1,1,2,2,4)
-- Mounjaro → nº de doses editável (ex.: 4)
+- Caixa de seleção para **incluir/excluir**:
+  - ✅ Medicamento principal (Wegovy/Mounjaro) — gere pela máscara e clique **Adicionar principal**
+  - ✅ **Ondansetrona 8 mg** (padrão)
+  - ✅ **Polietilenoglicol 4000 (PEG-Lax)** (padrão)
+- Campo para **adicionar item avulso** (texto livre). Você pode adicionar vários; aparece uma lista com botões de **remover**.
+- Ao clicar **Salvar & Imprimir (2 páginas)**:
+  - **Página 1:** SOAP puro.
+  - **Página 2:** duas vias lado a lado com logo + Paciente + Data + **somente os itens selecionados** (na ordem: principal → ondansetrona → PEG-Lax → itens avulsos).
 
-Fluxo:
-1) Preencha o SOAP
-2) Monte a prescrição na máscara → **Calcular / Gerar texto** → **Adicionar à prescrição**
-3) Clique **Salvar & Imprimir (via única SOAP + via única Prescrição)**
+Mantém:
+- IMC automático; campos #Comorbidade / #Alergias / #MUC; seções #S / #O / #P.
+- Layout de via dobrada lado a lado, com fonte ≈11px e **assinatura centralizada** em cada via.
+
+Sugestões futuras:
+- Botão “compactar fonte” (10 px) caso a prescrição fique longa.
+- Campo para número de **CRM digital** ou QR code opcional.

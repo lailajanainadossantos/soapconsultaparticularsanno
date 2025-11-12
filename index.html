@@ -3,23 +3,32 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Gerador SOAP — Emagrecimento (Via Única + Prescrição)</title>
+  <title>Gerador SOAP — Emagrecimento (2 páginas, 2 vias lado a lado + seleção de medicamentos)</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    :root { --brand:#2563eb; --ink:#0f172a; }
     .card { background:#fff; border-radius:18px; box-shadow: 0 12px 30px rgba(2,6,23,.06); }
     .label { font-size:12px; color:#334155; font-weight:600; letter-spacing:.02em }
     .input { width:100%; padding:.7rem .9rem; border:1px solid #e2e8f0; border-radius:12px; }
-    .btn  { padding:.8rem 1rem; border-radius:12px; font-weight:700; }
-    .btn-primary{ background:var(--brand); color:#fff; }
+    .btn  { padding:.6rem .9rem; border-radius:10px; font-weight:700; }
+    .btn-primary{ background:#2563eb; color:#fff; }
     .btn-ghost { border:1px solid #e2e8f0; background:#fff; }
-    .mono { white-space:pre-wrap; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size: 13px; line-height:1.35 }
+    .mono { white-space:pre-wrap; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Courier New", monospace; font-size: 13px; line-height:1.35 }
+    .rx-card { border:1px solid #e2e8f0; border-radius:10px; padding:10px; }
+    .rx-header { display:flex; gap:10px; align-items:center; margin-bottom:6px; }
+    .rx-header img { height:34px; }
+    .rx-meta { font-size:11px; color:#334155; }
+    .rx-body { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Courier New", monospace; font-size:11px; line-height:1.35; white-space:pre-wrap; }
+    .sig { border-top:1px solid #000; width:100%; text-align:center; font-size:11px; padding-top:4px; margin-top:8px; }
     @media print {
-      @page { size: A4 portrait; margin: 14mm; }
+      @page { size: A4 portrait; margin: 12mm; }
       .no-print { display:none !important; }
       .print-only { display:block !important; }
+      body { background:#fff; }
+      .grid-2 { display:grid; grid-template-columns: 1fr 1fr; gap:10px; }
     }
     .print-only { display:none; }
+    .grid-2 { display:grid; grid-template-columns: 1fr 1fr; gap:10px; }
+    .tag { display:inline-flex; align-items:center; gap:6px; background:#f1f5f9; border:1px solid #e2e8f0; padding:.25rem .5rem; border-radius:999px; font-size:12px; }
   </style>
 </head>
 <body class="bg-slate-50 text-slate-900 min-h-screen">
@@ -29,7 +38,7 @@
         <img src="./logo.png" class="w-9 h-9 rounded-lg ring-1 ring-slate-200" alt="SannoMed">
         <div>
           <h1 class="text-2xl font-bold tracking-tight">Gerador SOAP — Emagrecimento</h1>
-          <p class="text-xs text-slate-500">Via única (A4 retrato) + prescrição</p>
+          <p class="text-xs text-slate-500">Página 1: SOAP | Página 2: Prescrição em 2 vias lado a lado (seletor de medicamentos)</p>
         </div>
       </div>
       <div class="hidden md:flex gap-2 text-sm text-slate-600">
@@ -37,8 +46,8 @@
       </div>
     </header>
 
-    <!-- Formulário -->
-    <section class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <!-- Form + preview (não imprime) -->
+    <section class="grid grid-cols-1 lg:grid-cols-2 gap-6 no-print">
       <form id="formPront" class="card p-6 space-y-5">
         <h2 class="text-lg font-semibold">Prontuário — Via única</h2>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -97,24 +106,27 @@ buscar avaliação médica.</textarea>
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-          <button type="button" id="btnSalvarImprimir" class="btn btn-primary w-full">Salvar & Imprimir (via única SOAP + via única Prescrição)</button>
+          <button type="button" id="btnSalvarImprimir" class="btn btn-primary w-full">Salvar & Imprimir (2 páginas)</button>
           <button type="button" id="btnCopiarTexto" class="btn btn-ghost w-full">Copiar somente o texto SOAP</button>
         </div>
       </form>
 
-      <div class="card p-6">
-        <h3 class="text-lg font-semibold mb-2">Pré-visualização</h3>
-        <pre id="previewSOAP" class="mono min-h-[260px] p-3 border border-slate-200 rounded-xl">Preencha e clique em “Salvar & Imprimir”.</pre>
-        <div class="mt-4">
-          <h4 class="font-semibold mb-1">Prescrição (prévia)</h4>
-          <pre id="previewRX" class="mono min-h-[120px] p-3 border border-slate-200 rounded-xl">Use a máscara abaixo para montar a prescrição e depois clique em "Adicionar à prescrição".</pre>
+      <div class="card p-6 space-y-4">
+        <div>
+          <h3 class="text-lg font-semibold mb-2">Pré-visualização SOAP</h3>
+          <pre id="previewSOAP" class="mono min-h-[160px] p-3 border border-slate-200 rounded-xl">Preencha e clique em “Salvar & Imprimir”.</pre>
+        </div>
+        <div>
+          <h3 class="text-lg font-semibold mb-2">Prescrição (prévia)</h3>
+          <pre id="previewRX" class="mono min-h-[120px] p-3 border border-slate-200 rounded-xl">1) Monte o medicamento principal na máscara ↓ e clique em "Adicionar principal".
+2) Selecione abaixo quais itens incluir na prescrição (Wegovy/Mounjaro, Ondansetrona, PEG-Lax, itens avulsos).</pre>
         </div>
       </div>
     </section>
 
-    <!-- Máscara simples de Prescrição -->
+    <!-- Máscara de Prescrição + Seletor de Itens (não imprime) -->
     <section class="mt-8 card p-6 space-y-4 no-print">
-      <h2 class="text-lg font-semibold">Máscara de Prescrição</h2>
+      <h2 class="text-lg font-semibold">Máscara de Prescrição + Seleção de Itens</h2>
       <div class="grid grid-cols-1 md:grid-cols-5 gap-3">
         <label class="label">Medicamento
           <select id="med" class="input">
@@ -147,25 +159,45 @@ buscar avaliação médica.</textarea>
       </div>
       <div class="flex gap-3">
         <button type="button" id="btnCalcMask" class="btn btn-primary">Calcular / Gerar texto</button>
-        <button type="button" id="btnAddRX" class="btn btn-ghost">Adicionar à prescrição</button>
+        <button type="button" id="btnAddPrincipal" class="btn btn-ghost">Adicionar principal</button>
+      </div>
+
+      <hr class="my-2"/>
+      <h3 class="font-semibold">Selecionar itens para incluir na prescrição</h3>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <label class="label">
+          <input type="checkbox" id="selPrincipal" checked> Incluir medicamento principal (Wegovy/Mounjaro)
+        </label>
+        <label class="label">
+          <input type="checkbox" id="selOnd"> Incluir Ondansetrona 8mg (padrão)
+        </label>
+        <label class="label">
+          <input type="checkbox" id="selPeg"> Incluir Polietilenoglicol 4000 (PEG-Lax) (padrão)
+        </label>
+      </div>
+
+      <div class="mt-2">
+        <label class="label">Adicionar item avulso (texto livre da prescrição)</label>
+        <textarea id="customTxt" rows="3" class="input" placeholder="Digite o item de prescrição desejado..."></textarea>
+        <div class="mt-2 flex gap-2">
+          <button type="button" id="btnAddCustom" class="btn btn-ghost">Adicionar item avulso</button>
+          <button type="button" id="btnLimparCustom" class="btn btn-ghost">Limpar itens</button>
+        </div>
+        <div id="customList" class="mt-2 text-sm text-slate-600"></div>
       </div>
     </section>
 
-    <!-- Área de impressão ÚNICA: SOAP + Prescrição, uma vez cada -->
-    <section id="printArea" class="print-only">
-      <div style="display:flex; gap:12px; align-items:flex-start">
-        <img src="./logo.png" alt="SannoMed" style="height:56px">
-        <div>
-          <h2 style="margin:0;font-weight:800;">Consulta de Emagrecimento — Via única (SOAP)</h2>
-          <div style="font-size:12px;color:#334155">
-            Dra. Laila Janaína dos Santos — CRM-SC 38237 • SannoMed Clínica Integrada • Rua Otto Júlio Malina, 671 • Tel: (48) 3034-3735 • contato@sannomed.com.br
-          </div>
-        </div>
+    <!-- PÁGINA 1: somente SOAP -->
+    <section id="printSOAP" class="print-only">
+      <pre id="outSOAP" class="mono"></pre>
+    </section>
+
+    <!-- PÁGINA 2: prescrição em 2 vias lado a lado -->
+    <section id="printRX" class="print-only" style="page-break-before: always;">
+      <div class="grid-2">
+        <div id="rxVia1" class="rx-card"></div>
+        <div id="rxVia2" class="rx-card"></div>
       </div>
-      <pre id="outSOAP" class="mono" style="margin-top:8px"></pre>
-      <hr style="margin:16px 0;border:none;border-top:1px solid #e2e8f0"/>
-      <h2 style="margin:0 0 6px 0;font-weight:800;">Prescrição — Via única</h2>
-      <pre id="outRX" class="mono"></pre>
     </section>
   </main>
 
@@ -207,34 +239,10 @@ ${d.O||''}
 ${d.P||''}`;
     }
 
-    const previewSOAP = document.getElementById('previewSOAP');
-    const previewRX = document.getElementById('previewRX');
-    const outSOAP = document.getElementById('outSOAP');
-    const outRX = document.getElementById('outRX');
-    const formPront = document.getElementById('formPront');
-
-    let lastRX = ''; // guarda a prescrição montada
-
-    document.getElementById('btnSalvarImprimir').addEventListener('click', () => {
-      const data = formToObj(formPront);
-      const soap = buildSOAP(data);
-      previewSOAP.textContent = soap;
-      outSOAP.textContent = soap;
-      outRX.textContent = lastRX || '—';
-      window.print();
-    });
-    document.getElementById('btnCopiarTexto').addEventListener('click', async () => {
-      const data = formToObj(formPront);
-      const soap = buildSOAP(data);
-      await navigator.clipboard.writeText(soap);
-      alert('Texto SOAP copiado!');
-    });
-
-    // Lógica máscara simples (Wegovy/Mounjaro) para gerar bloco de prescrição
-    const BASE_CLICK_0_25 = { "wg-0.25":75, "wg-0.5":37, "wg-1.0":19, "wg-1.7":11, "wg-2.4":8 };
-    const LABELS_WG = { "wg-0.25":"0,25mg", "wg-0.5":"0,5mg", "wg-1.0":"1mg", "wg-1.7":"1,7mg", "wg-2.4":"2,4mg" };
-
+    // Montagem de blocos de prescrição
     function buildWegovy(apres, multStr){
+      const BASE_CLICK_0_25 = { "wg-0.25":75, "wg-0.5":37, "wg-1.0":19, "wg-1.7":11, "wg-2.4":8 };
+      const LABELS_WG = { "wg-0.25":"0,25mg", "wg-0.5":"0,5mg", "wg-1.0":"1mg", "wg-1.7":"1,7mg", "wg-2.4":"2,4mg" };
       const base = BASE_CLICK_0_25[apres];
       const labelDose = LABELS_WG[apres];
       const mults = (multStr||'1,1,2,2,4').split(',').map(s=>parseFloat(s.trim())).filter(n=>!isNaN(n)&&n>0);
@@ -245,7 +253,6 @@ Aplicar por via subcutânea, 1x por semana, sempre no mesmo dia.
 ${weeks}
 Local de aplicação cerca de 4 dedos da cicatriz umbilical, alternando os locais de aplicação`;
     }
-
     function buildMounjaro(label, nDoses){
       const d = (label||'').replace('Mounjaro ','').replace(' mg/dose','').trim();
       const dosePretty = d.replace(' ','');
@@ -255,6 +262,38 @@ Local de aplicação cerca de 4 dedos da cicatriz umbilical, alternando os locai
 Aplicar por via subcutânea, 1x por semana, sempre no mesmo dia (${n} doses) 
 Local de aplicação cerca de 4 dedos da cicatriz umbilical, alternando os locais de aplicação`;
     }
+    function buildOnd(){
+      return `USO ORAL
+1. Ondansetrona (ondif ou similar) 8mg _ Cx 
+Tomar 1 cp de 8 em 8h se náusea ou enjoo`;
+    }
+    function buildPeg(){
+      return `USO ORAL
+2. Polietilenoglicol 4000 (Peg-Lax) _ Cx
+Diluir um sache em um copo de água filtrada e tomar 1x ao dia. 
+Aumentar ingesta hídrica e de alimentos ricos em fibra`;
+    }
+
+    let principalTxt = '';
+    let customItems = [];
+
+    function renderCustomList(){
+      const list = document.getElementById('customList');
+      if (customItems.length === 0){ list.textContent = 'Nenhum item avulso adicionado.'; return; }
+      list.innerHTML = customItems.map((t,i)=>`<span class="tag">#${i+1} <button data-i="${i}" class="rm" title="remover" style="font-weight:700">×</button></span>`).join(' ');
+      list.querySelectorAll('.rm').forEach(btn=>{
+        btn.addEventListener('click', (e)=>{
+          const idx = parseInt(e.target.getAttribute('data-i'),10);
+          if (!isNaN(idx)){ customItems.splice(idx,1); renderCustomList(); }
+        });
+      });
+    }
+
+    // Preview área
+    const previewSOAP = document.getElementById('previewSOAP');
+    const previewRX = document.getElementById('previewRX');
+    const outSOAP = document.getElementById('outSOAP');
+    const formPront = document.getElementById('formPront');
 
     document.getElementById('btnCalcMask').addEventListener('click', () => {
       const med = document.getElementById('med').value;
@@ -270,11 +309,78 @@ Local de aplicação cerca de 4 dedos da cicatriz umbilical, alternando os locai
       previewRX.textContent = text;
     });
 
-    document.getElementById('btnAddRX').addEventListener('click', () => {
-      const txt = previewRX.textContent.trim();
-      if (!txt){ alert('Gere o texto da prescrição primeiro.'); return; }
-      lastRX = txt;
-      alert('Prescrição adicionada à via de impressão!');
+    document.getElementById('btnAddPrincipal').addEventListener('click', () => {
+      const txt = (document.getElementById('previewRX').textContent||'').trim();
+      if (!txt){ alert('Gere o texto do medicamento principal primeiro.'); return; }
+      principalTxt = txt;
+      alert('Medicamento principal adicionado para impressão.');
+    });
+
+    document.getElementById('btnAddCustom').addEventListener('click', () => {
+      const t = (document.getElementById('customTxt').value||'').trim();
+      if (!t) return;
+      customItems.push(t);
+      document.getElementById('customTxt').value='';
+      renderCustomList();
+    });
+    document.getElementById('btnLimparCustom').addEventListener('click', () => {
+      customItems = [];
+      renderCustomList();
+    });
+    renderCustomList();
+
+    document.getElementById('btnCopiarTexto').addEventListener('click', async () => {
+      const data = Object.fromEntries(new FormData(formPront).entries());
+      const soap = buildSOAP(data);
+      await navigator.clipboard.writeText(soap);
+      alert('Texto SOAP copiado!');
+    });
+
+    function renderRXCard(containerId, nome, data, bloco){
+      const el = document.getElementById(containerId);
+      el.innerHTML = `
+        <div class="rx-header">
+          <img src="./logo.png" alt="SannoMed">
+          <div>
+            <div style="font-weight:800">SannoMed Clínica Integrada</div>
+            <div class="rx-meta">Paciente: <strong>${(nome||'')}</strong> • Data: <strong>${(data||'')}</strong></div>
+          </div>
+        </div>
+        <div class="rx-body">${bloco.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
+        <div class="sig">Dra. Laila Janaína dos Santos — CRM-SC 38237</div>
+        <div class="rx-meta" style="margin-top:6px; text-align:center;">Rua Otto Júlio Malina, 671 • Tel: (48) 3034-3735 • contato@sannomed.com.br</div>
+      `;
+    }
+
+    document.getElementById('btnSalvarImprimir').addEventListener('click', () => {
+      const data = formToObj(formPront);
+      // Página 1: SOAP
+      const soap = buildSOAP(data);
+      previewSOAP.textContent = soap;
+      outSOAP.textContent = soap;
+
+      // Página 2: montar blocos conforme seleção
+      const blocks = [];
+      const selPrincipal = document.getElementById('selPrincipal').checked;
+      const selOnd = document.getElementById('selOnd').checked;
+      const selPeg = document.getElementById('selPeg').checked;
+
+      if (selPrincipal && principalTxt){
+        blocks.push(principalTxt);
+      } else if (selPrincipal && !principalTxt){
+        alert('Você marcou "Incluir medicamento principal", mas ainda não adicionou o texto do principal. Gere e clique em "Adicionar principal".');
+      }
+      if (selOnd) blocks.push(buildOnd());
+      if (selPeg) blocks.push(buildPeg());
+      if (customItems.length){
+        blocks.push(customItems.join('\n\n'));
+      }
+      const blocoRX = blocks.join('\n\n').trim() || '—';
+
+      renderRXCard('rxVia1', data.nome, data.dataConsulta, blocoRX);
+      renderRXCard('rxVia2', data.nome, data.dataConsulta, blocoRX);
+
+      window.print();
     });
   </script>
 </body>
