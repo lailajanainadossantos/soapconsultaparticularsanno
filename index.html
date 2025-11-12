@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>SannoMed — Gerador SOAP & Receita (v30)</title>
+  <title>SannoMed — Gerador SOAP & Receita (v31)</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     :root { --brand:#0ea5e9; --ink:#0f172a; }
@@ -147,25 +147,32 @@ buscar avaliação médica.</textarea>
       <h2 class="text-lg font-semibold">Selecionar medicações</h2>
 
       <!-- Grupo Wegovy/Mounjaro -->
-      <div class="grid grid-cols-1 md:grid-cols-6 gap-3">
+      <div class="grid grid-cols-1 md:grid-cols-7 gap-3">
         <div class="label">Principal</div>
         <label class="chip"><input type="radio" name="principal" value="wegovy" checked> Wegovy</label>
         <label class="chip"><input type="radio" name="principal" value="mounjaro"> Mounjaro</label>
 
         <label class="label md:col-span-2">Apresentação
           <select id="apres" class="input">
-            <option value="wg-0.25">Wegovy 0,25 mg (pen)</option>
-            <option value="wg-0.5">Wegovy 0,5 mg (pen)</option>
-            <option value="wg-1.0">Wegovy 1 mg (pen)</option>
-            <option value="wg-1.7">Wegovy 1,7 mg (pen)</option>
-            <option value="wg-2.4">Wegovy 2,4 mg (pen)</option>
-            <option value="mj-2.5">Mounjaro 2,5 mg/dose</option>
-            <option value="mj-5">Mounjaro 5 mg/dose</option>
-            <option value="mj-7.5">Mounjaro 7,5 mg/dose</option>
-            <option value="mj-10">Mounjaro 10 mg/dose</option>
+            <optgroup label="Wegovy — canetas">
+              <option value="wg-0.25">Wegovy 0,25 mg (pen)</option>
+              <option value="wg-0.5">Wegovy 0,5 mg (pen)</option>
+              <option value="wg-1.0">Wegovy 1 mg (pen)</option>
+              <option value="wg-1.7">Wegovy 1,7 mg (pen)</option>
+              <option value="wg-2.4">Wegovy 2,4 mg (pen)</option>
+            </optgroup>
+            <optgroup label="Mounjaro — seringas pré-cheias">
+              <option value="mj-2.5">Mounjaro 2,5 mg/dose</option>
+              <option value="mj-5">Mounjaro 5 mg/dose</option>
+              <option value="mj-7.5">Mounjaro 7,5 mg/dose</option>
+              <option value="mj-10">Mounjaro 10 mg/dose</option>
+            </optgroup>
           </select>
         </label>
 
+        <label class="label">Dose semanal (Wegovy, mg)
+          <input id="wgDose" type="number" step="0.25" min="0.25" value="0.25" class="input">
+        </label>
         <label class="label">Multiplicadores Wegovy
           <input id="wgMult" class="input" value="1,1,2,2,4">
         </label>
@@ -288,14 +295,14 @@ ${d.P||''}`;
       html = html
         .replace(/\r\n/g, '\n')
         .replace(/&nbsp;/g, ' ')
-        .replace(/<div><br\s*\/?><\/div>/gi, '\n\n') // div vazio vira \n\n
+        .replace(/<div><br\s*\/?><\/div>/gi, '\n\n')
         .replace(/<br\s*\/?>(?=\s*<br\s*\/?>(\s|\n|\r)*)/gi, '<br><br>')
         .replace(/<br\s*\/?>(?!\n)/gi, '\n')
         .replace(/<\/div>\s*<div>/gi, '\n')
         .replace(/<div>/gi, '')
         .replace(/<\/div>/gi, '');
       html = html.replace(/<[^>]+>/g, '');
-      return html.replace(/\s+$/,''); // sem trim agressivo
+      return html.replace(/\s+$/,''); // preserva quebras internas
     }
     function encodeHTML(s){
       return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
@@ -305,17 +312,19 @@ ${d.P||''}`;
     const ORD = ["primeira","segunda","terceira","quarta","quinta","sexta","sétima","oitava","nona","décima"];
     const BASE_CLICK_0_25 = { "wg-0.25":75, "wg-0.5":37, "wg-1.0":19, "wg-1.7":11, "wg-2.4":8 };
     const LABELS_WG = { "wg-0.25":"0,25mg", "wg-0.5":"0,5mg", "wg-1.0":"1mg", "wg-1.7":"1,7mg", "wg-2.4":"2,4mg" };
-    function buildWegovy(apres, multStr){
-      const base = BASE_CLICK_0_25[apres];
+    function buildWegovy(apres, baseDoseMg, multStr){
+      const baseClicksPerQuarter = BASE_CLICK_0_25[apres];
       const labelDose = LABELS_WG[apres];
+      const factor = Math.max(0.25, parseFloat(baseDoseMg||'0.25')) / 0.25;
       const mults = (multStr||'1,1,2,2,4').split(',').map(s=>parseFloat(s.trim())).filter(n=>!isNaN(n)&&n>0);
-      const arr = (mults.length?mults:[1,1,2,2,4]).map((m,i)=>{
+      const seq = (mults.length?mults:[1,1,2,2,4]).map((m,i)=>{
         const ord = ORD[i] || `${i+1}ª`;
-        return `Na ${ord} semana aplicar ${Math.round(base*m)} cliques`;
+        const clicks = Math.round(baseClicksPerQuarter * factor * m);
+        return `Na ${ord} semana aplicar ${clicks} cliques`;
       }).join('\n');
       return `1. Wegovy ${labelDose} (Semaglutida) - 1Cx
 Aplicar por via subcutânea, 1x por semana, sempre no mesmo dia. 
-${arr}
+${seq}
 Local de aplicação cerca de 4 dedos da cicatriz umbilical, alternando os locais de aplicação`;
     }
     function buildMounjaro(label, nDoses){
@@ -356,10 +365,11 @@ Aumentar ingesta hídrica e de alimentos ricos em fibra`;
     btnPreviewPrincipal.addEventListener('click', () => {
       const medSel = principalChoice();
       const apres = document.getElementById('apres').value;
+      const baseDose = document.getElementById('wgDose').value;
       const mult = document.getElementById('wgMult').value;
       const nD = document.getElementById('nDoses').value;
       if (medSel==='wegovy'){
-        principalTxt = buildWegovy(apres, mult);
+        principalTxt = buildWegovy(apres, baseDose, mult);
       } else {
         const label = document.getElementById('apres').selectedOptions[0].textContent;
         principalTxt = buildMounjaro(label, nD);
@@ -368,7 +378,7 @@ Aumentar ingesta hídrica e de alimentos ricos em fibra`;
       previewDiv.textContent = principalTxt + (cur ? ("\n\n" + cur) : "");
     });
     btnAddPrincipal.addEventListener('click', () => {
-      if (!principalTxt){ alert('Clique em \"Pré-visualizar principal\" antes de adicionar.'); return; }
+      if (!principalTxt){ alert('Clique em "Pré-visualizar principal" antes de adicionar."); return; }
       const cur = getPreviewAsPlain();
       previewDiv.textContent = principalTxt + (cur ? ("\n\n" + cur) : "");
     });
