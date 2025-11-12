@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Gerador SOAP — Emagrecimento (2 páginas, 2 vias lado a lado + seleção de medicamentos)</title>
+  <title>Gerador SOAP — Emagrecimento (SOAP + Receita Médica horizontal 2 vias)</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     .card { background:#fff; border-radius:18px; box-shadow: 0 12px 30px rgba(2,6,23,.06); }
@@ -14,13 +14,15 @@
     .btn-ghost { border:1px solid #e2e8f0; background:#fff; }
     .mono { white-space:pre-wrap; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Courier New", monospace; font-size: 13px; line-height:1.35 }
     .rx-card { border:1px solid #e2e8f0; border-radius:10px; padding:10px; }
-    .rx-header { display:flex; gap:10px; align-items:center; margin-bottom:6px; }
+    .rx-headline { font-size:14px; font-weight:800; text-align:center; margin-bottom:6px; }
+    .rx-header { display:flex; gap:8px; align-items:center; justify-content:center; margin-bottom:6px; }
     .rx-header img { height:34px; }
-    .rx-meta { font-size:11px; color:#334155; }
+    .rx-meta { font-size:11px; color:#334155; text-align:center; }
     .rx-body { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Courier New", monospace; font-size:11px; line-height:1.35; white-space:pre-wrap; }
     .sig { border-top:1px solid #000; width:100%; text-align:center; font-size:11px; padding-top:4px; margin-top:8px; }
     @media print {
-      @page { size: A4 portrait; margin: 12mm; }
+      /* Agora toda a impressão em A4 horizontal para garantir a Receita em landscape */
+      @page { size: A4 landscape; margin: 12mm; }
       .no-print { display:none !important; }
       .print-only { display:block !important; }
       body { background:#fff; }
@@ -35,10 +37,10 @@
   <main class="max-w-6xl mx-auto p-6">
     <header class="no-print mb-6 flex items-center justify-between">
       <div class="flex items-center gap-3">
-        <img src="./logo.png" class="w-9 h-9 rounded-lg ring-1 ring-slate-200" alt="SannoMed">
+        <img src="./logo.png" class="h-8 w-auto rounded-sm ring-1 ring-slate-200 bg-white p-1" alt="SannoMed">
         <div>
           <h1 class="text-2xl font-bold tracking-tight">Gerador SOAP — Emagrecimento</h1>
-          <p class="text-xs text-slate-500">Página 1: SOAP | Página 2: Prescrição em 2 vias lado a lado (seletor de medicamentos)</p>
+          <p class="text-xs text-slate-500">Pág. 1: SOAP | Pág. 2: <b>Receita Médica</b> horizontal (2 vias lado a lado)</p>
         </div>
       </div>
       <div class="hidden md:flex gap-2 text-sm text-slate-600">
@@ -124,7 +126,7 @@ buscar avaliação médica.</textarea>
       </div>
     </section>
 
-    <!-- Máscara de Prescrição + Seletor de Itens (não imprime) -->
+    <!-- Máscara de Prescrição + Seletor (não imprime) -->
     <section class="mt-8 card p-6 space-y-4 no-print">
       <h2 class="text-lg font-semibold">Máscara de Prescrição + Seleção de Itens</h2>
       <div class="grid grid-cols-1 md:grid-cols-5 gap-3">
@@ -192,11 +194,29 @@ buscar avaliação médica.</textarea>
       <pre id="outSOAP" class="mono"></pre>
     </section>
 
-    <!-- PÁGINA 2: prescrição em 2 vias lado a lado -->
+    <!-- PÁGINA 2: RECEITA MÉDICA horizontal, 2 vias lado a lado -->
     <section id="printRX" class="print-only" style="page-break-before: always;">
       <div class="grid-2">
-        <div id="rxVia1" class="rx-card"></div>
-        <div id="rxVia2" class="rx-card"></div>
+        <div id="rxVia1" class="rx-card">
+          <div class="rx-headline">RECEITA MÉDICA</div>
+          <div class="rx-header">
+            <img src="./logo.png" alt="SannoMed">
+          </div>
+          <div class="rx-meta" id="meta1"></div>
+          <div class="rx-body" id="body1"></div>
+          <div class="sig">Dra. Laila Janaína dos Santos — CRM-SC 38237</div>
+          <div class="rx-meta" style="margin-top:6px;">Rua Otto Júlio Malina, 671 • Tel: (48) 3034-3735 • contato@sannomed.com.br</div>
+        </div>
+        <div id="rxVia2" class="rx-card">
+          <div class="rx-headline">RECEITA MÉDICA</div>
+          <div class="rx-header">
+            <img src="./logo.png" alt="SannoMed">
+          </div>
+          <div class="rx-meta" id="meta2"></div>
+          <div class="rx-body" id="body2"></div>
+          <div class="sig">Dra. Laila Janaína dos Santos — CRM-SC 38237</div>
+          <div class="rx-meta" style="margin-top:6px;">Rua Otto Júlio Malina, 671 • Tel: (48) 3034-3735 • contato@sannomed.com.br</div>
+        </div>
       </div>
     </section>
   </main>
@@ -239,7 +259,7 @@ ${d.O||''}
 ${d.P||''}`;
     }
 
-    // Montagem de blocos de prescrição
+    // Blocos de prescrição
     function buildWegovy(apres, multStr){
       const BASE_CLICK_0_25 = { "wg-0.25":75, "wg-0.5":37, "wg-1.0":19, "wg-1.7":11, "wg-2.4":8 };
       const LABELS_WG = { "wg-0.25":"0,25mg", "wg-0.5":"0,5mg", "wg-1.0":"1mg", "wg-1.7":"1,7mg", "wg-2.4":"2,4mg" };
@@ -277,9 +297,31 @@ Aumentar ingesta hídrica e de alimentos ricos em fibra`;
     let principalTxt = '';
     let customItems = [];
 
+    // Máscara → preview do principal
+    document.getElementById('btnCalcMask').addEventListener('click', () => {
+      const medSel = document.getElementById('med').value;
+      const apres = document.getElementById('apres').value;
+      const mult = document.getElementById('wgMult').value;
+      const nD = document.getElementById('nDoses').value;
+      let text = '';
+      if (medSel==='wegovy'){ text = buildWegovy(apres, mult); }
+      else {
+        const label = document.getElementById('apres').selectedOptions[0].textContent;
+        text = buildMounjaro(label, nD);
+      }
+      document.getElementById('previewRX').textContent = text;
+    });
+    document.getElementById('btnAddPrincipal').addEventListener('click', () => {
+      const txt = (document.getElementById('previewRX').textContent||'').trim();
+      if (!txt){ alert('Gere o texto do medicamento principal primeiro.'); return; }
+      principalTxt = txt;
+      alert('Medicamento principal adicionado para impressão.');
+    });
+
+    // Itens avulsos
     function renderCustomList(){
       const list = document.getElementById('customList');
-      if (customItems.length === 0){ list.textContent = 'Nenhum item avulso adicionado.'; return; }
+      if (!customItems.length){ list.textContent = 'Nenhum item avulso adicionado.'; return; }
       list.innerHTML = customItems.map((t,i)=>`<span class="tag">#${i+1} <button data-i="${i}" class="rm" title="remover" style="font-weight:700">×</button></span>`).join(' ');
       list.querySelectorAll('.rm').forEach(btn=>{
         btn.addEventListener('click', (e)=>{
@@ -288,34 +330,6 @@ Aumentar ingesta hídrica e de alimentos ricos em fibra`;
         });
       });
     }
-
-    // Preview área
-    const previewSOAP = document.getElementById('previewSOAP');
-    const previewRX = document.getElementById('previewRX');
-    const outSOAP = document.getElementById('outSOAP');
-    const formPront = document.getElementById('formPront');
-
-    document.getElementById('btnCalcMask').addEventListener('click', () => {
-      const med = document.getElementById('med').value;
-      const apres = document.getElementById('apres').value;
-      const mult = document.getElementById('wgMult').value;
-      const nD = document.getElementById('nDoses').value;
-      let text = '';
-      if (med==='wegovy'){ text = buildWegovy(apres, mult); }
-      else {
-        const label = document.getElementById('apres').selectedOptions[0].textContent;
-        text = buildMounjaro(label, nD);
-      }
-      previewRX.textContent = text;
-    });
-
-    document.getElementById('btnAddPrincipal').addEventListener('click', () => {
-      const txt = (document.getElementById('previewRX').textContent||'').trim();
-      if (!txt){ alert('Gere o texto do medicamento principal primeiro.'); return; }
-      principalTxt = txt;
-      alert('Medicamento principal adicionado para impressão.');
-    });
-
     document.getElementById('btnAddCustom').addEventListener('click', () => {
       const t = (document.getElementById('customTxt').value||'').trim();
       if (!t) return;
@@ -329,6 +343,10 @@ Aumentar ingesta hídrica e de alimentos ricos em fibra`;
     });
     renderCustomList();
 
+    // Prévia / cópia SOAP
+    const previewSOAP = document.getElementById('previewSOAP');
+    const outSOAP = document.getElementById('outSOAP');
+    const formPront = document.getElementById('formPront');
     document.getElementById('btnCopiarTexto').addEventListener('click', async () => {
       const data = Object.fromEntries(new FormData(formPront).entries());
       const soap = buildSOAP(data);
@@ -336,49 +354,29 @@ Aumentar ingesta hídrica e de alimentos ricos em fibra`;
       alert('Texto SOAP copiado!');
     });
 
-    function renderRXCard(containerId, nome, data, bloco){
-      const el = document.getElementById(containerId);
-      el.innerHTML = `
-        <div class="rx-header">
-          <img src="./logo.png" alt="SannoMed">
-          <div>
-            <div style="font-weight:800">SannoMed Clínica Integrada</div>
-            <div class="rx-meta">Paciente: <strong>${(nome||'')}</strong> • Data: <strong>${(data||'')}</strong></div>
-          </div>
-        </div>
-        <div class="rx-body">${bloco.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
-        <div class="sig">Dra. Laila Janaína dos Santos — CRM-SC 38237</div>
-        <div class="rx-meta" style="margin-top:6px; text-align:center;">Rua Otto Júlio Malina, 671 • Tel: (48) 3034-3735 • contato@sannomed.com.br</div>
-      `;
+    function renderVia(viaPrefix, nome, data, bloco){
+      document.getElementById('meta' + viaPrefix).textContent = `Paciente: ${nome||''} • Data: ${data||''}`;
+      const bodyEl = document.getElementById('body' + viaPrefix);
+      bodyEl.textContent = bloco;
     }
 
+    // Salvar & Imprimir
     document.getElementById('btnSalvarImprimir').addEventListener('click', () => {
-      const data = formToObj(formPront);
-      // Página 1: SOAP
+      const data = Object.fromEntries(new FormData(formPront).entries());
       const soap = buildSOAP(data);
       previewSOAP.textContent = soap;
       outSOAP.textContent = soap;
 
-      // Página 2: montar blocos conforme seleção
+      // Blocos conforme seleção
       const blocks = [];
-      const selPrincipal = document.getElementById('selPrincipal').checked;
-      const selOnd = document.getElementById('selOnd').checked;
-      const selPeg = document.getElementById('selPeg').checked;
+      if (document.getElementById('selPrincipal').checked && principalTxt) blocks.push(principalTxt);
+      if (document.getElementById('selOnd').checked) blocks.push(buildOnd());
+      if (document.getElementById('selPeg').checked) blocks.push(buildPeg());
+      if (customItems.length) blocks.push(customItems.join('\n\n'));
+      const blocoRX = (blocks.join('\n\n').trim() || '—');
 
-      if (selPrincipal && principalTxt){
-        blocks.push(principalTxt);
-      } else if (selPrincipal && !principalTxt){
-        alert('Você marcou "Incluir medicamento principal", mas ainda não adicionou o texto do principal. Gere e clique em "Adicionar principal".');
-      }
-      if (selOnd) blocks.push(buildOnd());
-      if (selPeg) blocks.push(buildPeg());
-      if (customItems.length){
-        blocks.push(customItems.join('\n\n'));
-      }
-      const blocoRX = blocks.join('\n\n').trim() || '—';
-
-      renderRXCard('rxVia1', data.nome, data.dataConsulta, blocoRX);
-      renderRXCard('rxVia2', data.nome, data.dataConsulta, blocoRX);
+      renderVia('1', data.nome, data.dataConsulta, blocoRX);
+      renderVia('2', data.nome, data.dataConsulta, blocoRX);
 
       window.print();
     });

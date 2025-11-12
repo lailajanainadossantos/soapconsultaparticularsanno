@@ -1,20 +1,13 @@
-# Gerador SOAP — Emagrecimento — v13
+# Gerador SOAP — Emagrecimento — v14
 
-**Novidade: seleção de medicações para a página 2 (duas vias lado a lado)**
+**Correções e melhorias:**
+- Substituída a logo pelo arquivo que você enviou (SannoMed).
+- **Título "RECEITA MÉDICA"** no topo de cada via.
+- **Prescrição em horizontal (A4 landscape)** na impressão (ambas as páginas saem em landscape para garantir compatibilidade).
+- Mantém 2 vias **lado a lado**, cada uma com: logo, Paciente, Data, itens selecionados, **assinatura centralizada** e rodapé.
 
-- Caixa de seleção para **incluir/excluir**:
-  - ✅ Medicamento principal (Wegovy/Mounjaro) — gere pela máscara e clique **Adicionar principal**
-  - ✅ **Ondansetrona 8 mg** (padrão)
-  - ✅ **Polietilenoglicol 4000 (PEG-Lax)** (padrão)
-- Campo para **adicionar item avulso** (texto livre). Você pode adicionar vários; aparece uma lista com botões de **remover**.
-- Ao clicar **Salvar & Imprimir (2 páginas)**:
-  - **Página 1:** SOAP puro.
-  - **Página 2:** duas vias lado a lado com logo + Paciente + Data + **somente os itens selecionados** (na ordem: principal → ondansetrona → PEG-Lax → itens avulsos).
+Mantém também:
+- Página 1 = SOAP puro.
+- Seletor de medicações (principal Wegovy/Mounjaro; Ondansetrona; PEG-Lax; itens avulsos).
 
-Mantém:
-- IMC automático; campos #Comorbidade / #Alergias / #MUC; seções #S / #O / #P.
-- Layout de via dobrada lado a lado, com fonte ≈11px e **assinatura centralizada** em cada via.
-
-Sugestões futuras:
-- Botão “compactar fonte” (10 px) caso a prescrição fique longa.
-- Campo para número de **CRM digital** ou QR code opcional.
+Se quiser deixar a página 1 (SOAP) em retrato e apenas a página 2 em paisagem, posso montar uma variante usando CSS Paged Media específico. Alguns navegadores não suportam bem, mas posso tentar.
