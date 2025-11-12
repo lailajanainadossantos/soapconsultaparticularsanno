@@ -12,13 +12,13 @@
     .btn  { padding:.55rem .9rem; border-radius:10px; font-weight:700; }
     .btn-primary{ background:#2563eb; color:#fff; }
     .btn-ghost { border:1px solid #e2e8f0; background:#fff; }
-    .mono { white-space:pre-wrap; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Courier New", monospace; font-size: 13px; line-height:1.35 }
+    .mono { white-space:pre-wrap; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Courier New", monospace; font-size: 13px; line-height:1.5 }
     .rx-card { border:1px solid #e2e8f0; border-radius:10px; padding:10px; display:flex; flex-direction:column; min-height: 185mm; }
-    .rx-headline { font-size:14px; font-weight:800; text-align:center; margin-bottom:4px; }
-    .rx-header { display:flex; gap:8px; align-items:center; justify-content:center; margin-bottom:4px; }
+    .rx-headline { font-size:14px; font-weight:800; text-align:center; margin-bottom:6px; }
+    .rx-header { display:flex; gap:8px; align-items:center; justify-content:center; margin-bottom:6px; }
     .rx-header img { height:34px; }
     .rx-meta { font-size:11px; color:#334155; text-align:center; }
-    .rx-body { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Courier New", monospace; font-size:11px; line-height:1.35; white-space:pre-wrap; flex: 1 1 auto; }
+    .rx-body { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Courier New", monospace; font-size:11px; line-height:1.5; white-space:pre-wrap; flex: 1 1 auto; }
     .sig { border-top:1px solid #000; width:100%; text-align:center; font-size:11px; padding-top:4px; margin-top:8px; }
     @media print {
       @page { size: A4 landscape; margin: 12mm; }
@@ -119,12 +119,12 @@ buscar avaliação médica.</textarea>
         </div>
         <div>
           <h3 class="text-lg font-semibold mb-2">Prescrição (prévia, itens adicionados)</h3>
-          <pre id="previewRX" class="mono min-h-[120px] p-3 border border-slate-200 rounded-xl">Use os botões "Adicionar" para montar a prescrição. Itens aparecem aqui.</pre>
+          <pre id="previewRX" class="mono min-h-[120px] p-3 border border-slate-200 rounded-xl">Use os botões "Adicionar" para montar a prescrição. Os itens aparecerão aqui com o mesmo espaçamento da impressão.</pre>
         </div>
       </div>
     </section>
 
-    <!-- Máscara de Prescrição + Botões Adicionar (não imprime) -->
+    <!-- Montagem da prescrição (não imprime) -->
     <section class="mt-8 card p-6 space-y-4 no-print">
       <h2 class="text-lg font-semibold">Montar Prescrição</h2>
 
@@ -190,7 +190,7 @@ buscar avaliação médica.</textarea>
       <pre id="outSOAP" class="mono"></pre>
     </section>
 
-    <!-- PÁGINA 2: RECEITA MÉDICA horizontal, 2 vias lado a lado com 1ª/2ª -->
+    <!-- PÁGINA 2: RECEITA MÉDICA horizontal, 2 vias lado a lado -->
     <section id="printRX" class="print-only" style="page-break-before: always;">
       <div class="grid-2">
         <div id="rxVia1" class="rx-card">
@@ -293,8 +293,12 @@ Aumentar ingesta hídrica e de alimentos ricos em fibra`;
     // Estado
     let principalTxt = '';
     let blocks = []; // itens adicionados, em ordem
+    function joinBlocks(blks){
+      // 3 quebras para espaçamento suave entre medicações, sem divisores
+      return blks.join('\\n\\n\\n').trim();
+    }
     function updatePreviewRX(){
-      const txt = blocks.join('\\n\\n').trim() || '—';
+      const txt = joinBlocks(blocks) || '—';
       document.getElementById('previewRX').textContent = txt;
     }
 
@@ -352,7 +356,7 @@ Aumentar ingesta hídrica e de alimentos ricos em fibra`;
       previewSOAP.textContent = soap;
       outSOAP.textContent = soap;
 
-      const blocoRX = (blocks.join('\\n\\n').trim() || '—');
+      const blocoRX = (joinBlocks(blocks) || '—');
       renderVia('1', data.nome, data.dataConsulta, blocoRX);
       renderVia('2', data.nome, data.dataConsulta, blocoRX);
 
