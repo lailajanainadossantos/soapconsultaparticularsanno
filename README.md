@@ -1,12 +1,12 @@
-# Gerador SOAP — Emagrecimento — v16
+# Gerador SOAP — Emagrecimento — v17
 
-**Ajustes solicitados (sem divisores):**
-- **Espaçamento natural aumentado** entre blocos de medicação (Wegovy/Mounjaro, Ondansetrona, PEG-Lax e avulsos) tanto na **pré-visualização** quanto na **impressão**.  
-- Mantém a **duas vias horizontais** com cabeçalho **“RECEITA MÉDICA — 1ª via / 2ª via”**, logo SannoMed, **Paciente + Data** centralizados, e assinatura no rodapé.
+**Novidades:**
+- **Divisores** entre os blocos de medicação na prescrição (`──────────────────────────────`) — aplicados na **pré-visualização** e na **impressão**.
+- Botões **“Compactar fonte (10 px)”** e **“Expandir fonte (12 px)”** que ajustam o tamanho da fonte na prévia e nas duas vias da impressão.
 
-**Como montar:**
-1) Monte o principal (pré-visualizar → **Adicionar principal**).
-2) Use os botões **+ Adicionar Ondansetrona**, **+ Adicionar PEG-Lax** e **+ Adicionar** avulsos para compor a receita.
-3) Clique **Salvar & Imprimir**: Página 1 (SOAP) | Página 2 (prescrição em 2 vias).
+**Mantido:**
+- Página 1: SOAP puro.
+- Página 2: Receita horizontal em **duas vias lado a lado** com “RECEITA MÉDICA — 1ª via / 2ª via”, logo SannoMed, Paciente + Data centralizados e assinatura no rodapé.
+- Máscara para Wegovy/Mounjaro, botões para **Adicionar Ondansetrona**, **Adicionar PEG-Lax** e **Adicionar item avulso**.
 
-Se quiser, incluímos um botão **“Compactar fonte (10 px)”** para conteúdo muito extenso.
+Se quiser, posso incluir um botão “**Linhas mais compactas**” (line-height 1.35) e “**Linhas mais amplas**” (1.6) para situations de muito conteúdo.

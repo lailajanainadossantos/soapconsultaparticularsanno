@@ -106,9 +106,13 @@ buscar avaliação médica.</textarea>
           </label>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
           <button type="button" id="btnSalvarImprimir" class="btn btn-primary w-full">Salvar & Imprimir (2 páginas)</button>
-          <button type="button" id="btnCopiarTexto" class="btn btn-ghost w-full">Copiar somente o texto SOAP</button>
+          <button type="button" id="btnCopiarTexto" class="btn btn-ghost w-full">Copiar SOAP</button>
+          <div class="flex gap-2">
+            <button type="button" id="btnCompactar" class="btn btn-ghost w-full">Compactar fonte (10 px)</button>
+            <button type="button" id="btnExpandir" class="btn btn-ghost w-full">Expandir fonte (12 px)</button>
+          </div>
         </div>
       </form>
 
@@ -118,8 +122,8 @@ buscar avaliação médica.</textarea>
           <pre id="previewSOAP" class="mono min-h-[160px] p-3 border border-slate-200 rounded-xl">Preencha e clique em “Salvar & Imprimir”.</pre>
         </div>
         <div>
-          <h3 class="text-lg font-semibold mb-2">Prescrição (prévia, itens adicionados)</h3>
-          <pre id="previewRX" class="mono min-h-[120px] p-3 border border-slate-200 rounded-xl">Use os botões "Adicionar" para montar a prescrição. Os itens aparecerão aqui com o mesmo espaçamento da impressão.</pre>
+          <h3 class="text-lg font-semibold mb-2">Prescrição (prévia)</h3>
+          <pre id="previewRX" class="mono min-h-[120px] p-3 border border-slate-200 rounded-xl">Use os botões "Adicionar" para montar a prescrição. Divisores serão aplicados automaticamente entre os blocos.</pre>
         </div>
       </div>
     </section>
@@ -239,7 +243,6 @@ buscar avaliação médica.</textarea>
       updateIMC();
     })();
 
-    function formToObj(form){ return Object.fromEntries(new FormData(form).entries()); }
     function buildSOAP(d){
       return `#Data: ${d.dataConsulta||''}
 #Nome do paciente: ${d.nome||''}
@@ -293,9 +296,10 @@ Aumentar ingesta hídrica e de alimentos ricos em fibra`;
     // Estado
     let principalTxt = '';
     let blocks = []; // itens adicionados, em ordem
+    const DIVISOR = '\\n\\n──────────────────────────────\\n\\n';
+
     function joinBlocks(blks){
-      // 3 quebras para espaçamento suave entre medicações, sem divisores
-      return blks.join('\\n\\n\\n').trim();
+      return blks.join(DIVISOR).trim();
     }
     function updatePreviewRX(){
       const txt = joinBlocks(blocks) || '—';
@@ -333,6 +337,13 @@ Aumentar ingesta hídrica e de alimentos ricos em fibra`;
       blocks.unshift(principalTxt); // mantém como primeiro
       updatePreviewRX();
     });
+
+    // Ajuste de fonte (10px / 12px) nas vias e na prévia
+    function setFontSize(px){
+      document.querySelectorAll('.rx-body, #previewRX').forEach(el => el.style.fontSize = px + 'px');
+    }
+    document.getElementById('btnCompactar').addEventListener('click', ()=> setFontSize(10));
+    document.getElementById('btnExpandir').addEventListener('click', ()=> setFontSize(12));
 
     // SOAP: copiar e imprimir
     const previewSOAP = document.getElementById('previewSOAP');
