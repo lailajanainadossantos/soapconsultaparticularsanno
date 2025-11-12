@@ -1,10 +1,14 @@
-# Gerador SOAP — Emagrecimento (Via Única + Máscara de Prescrição) — v8
+# Gerador SOAP — Emagrecimento — v9
 
-**Novo (Wegovy editável):**
-- Campo **“Multiplicadores Wegovy”** para definir o esquema semana-a-semana (padrão `1,1,2,2,4`).
-- O bloco gerado lista: `Na semana 1 aplicar X cliques`, `Na semana 2 aplicar Y cliques`, ... conforme seu esquema.
-- A caixa “Resultado” mantém o cálculo proporcional à **dose/semana** informada (base 0,25 mg da caneta).
+**Novo:** Ao salvar/imprimir, é gerada **apenas uma via única** contendo:
+1) **SOAP completo** no topo (no formato que você exemplificou)
+2) **Prescrição** abaixo (uma única via), preenchida pela máscara
 
-Mantido:
-- **Mounjaro** com **Nº de doses** editável.
-- Via única (PDF), IMC automático, campos #Comorbidade/#Alergias/#MUC, seções #S/#O/#P.
+Para a prescrição:
+- Wegovy → multiplicadores editáveis (ex.: 1,1,2,2,4)
+- Mounjaro → nº de doses editável (ex.: 4)
+
+Fluxo:
+1) Preencha o SOAP
+2) Monte a prescrição na máscara → **Calcular / Gerar texto** → **Adicionar à prescrição**
+3) Clique **Salvar & Imprimir (via única SOAP + via única Prescrição)**

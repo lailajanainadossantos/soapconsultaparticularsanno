@@ -14,14 +14,12 @@
     .btn-primary{ background:var(--brand); color:#fff; }
     .btn-ghost { border:1px solid #e2e8f0; background:#fff; }
     .mono { white-space:pre-wrap; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size: 13px; line-height:1.35 }
-    .kpi { display:flex; align-items:center; gap:8px; border:1px solid #e2e8f0; padding:.6rem .8rem; border-radius:12px; }
     @media print {
       @page { size: A4 portrait; margin: 14mm; }
       .no-print { display:none !important; }
       .print-only { display:block !important; }
     }
     .print-only { display:none; }
-    .note { font-size:12px; color:#64748b; }
   </style>
 </head>
 <body class="bg-slate-50 text-slate-900 min-h-screen">
@@ -31,15 +29,15 @@
         <img src="./logo.png" class="w-9 h-9 rounded-lg ring-1 ring-slate-200" alt="SannoMed">
         <div>
           <h1 class="text-2xl font-bold tracking-tight">Gerador SOAP — Emagrecimento</h1>
-          <p class="text-xs text-slate-500">Via única (A4 retrato) + máscara de prescrição (Wegovy/Mounjaro)</p>
+          <p class="text-xs text-slate-500">Via única (A4 retrato) + prescrição</p>
         </div>
       </div>
-      <div class="hidden md:flex gap-2">
-        <span class="kpi text-sm"><strong>IMC:</strong> <span id="imcVal">—</span></span>
+      <div class="hidden md:flex gap-2 text-sm text-slate-600">
+        <span><strong>IMC:</strong> <span id="imcVal">—</span></span>
       </div>
     </header>
 
-    <!-- Bloco 1: Via única do prontuário -->
+    <!-- Formulário -->
     <section class="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <form id="formPront" class="card p-6 space-y-5">
         <h2 class="text-lg font-semibold">Prontuário — Via única</h2>
@@ -48,68 +46,76 @@
             <input type="date" name="dataConsulta" id="dataConsulta" class="input">
           </label>
           <label class="label">#Nome do paciente
-            <input name="nome" class="input" placeholder="Nome completo">
+            <input name="nome" class="input" placeholder="Nome completo" value="LAILA JANAINA">
           </label>
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <label class="label">Peso (kg)
-            <input type="number" step="0.1" name="peso" id="peso" class="input" placeholder="84.5">
+            <input type="number" step="0.1" name="peso" id="peso" class="input" placeholder="65" value="65">
           </label>
           <label class="label">Altura (m)
-            <input type="number" step="0.01" name="altura" id="altura" class="input" placeholder="1.67">
+            <input type="number" step="0.01" name="altura" id="altura" class="input" placeholder="1.69" value="1.69">
           </label>
           <div class="label">IMC
             <div class="input bg-slate-50"><span id="imcBadge">—</span></div>
           </div>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <label class="label">#Comorbidade
-            <input name="comorbidade" class="input" placeholder="NEGA ou descrever">
+            <input name="comorbidade" class="input" placeholder="NEGA ou descrever" value="Nega">
           </label>
           <label class="label">#Alergias
-            <input name="alergias" class="input" placeholder="NEGA ou descrever">
+            <input name="alergias" class="input" placeholder="NEGA ou descrever" value="Nega">
           </label>
-          <label class="label sm:col-span-2">#MUC
-            <input name="muc" class="input" placeholder="Medicações em uso correntes">
+          <label class="label">#MUC
+            <input name="muc" class="input" placeholder="Medicações em uso correntes" value="Nega">
           </label>
         </div>
 
         <div class="grid grid-cols-1 gap-3">
           <label class="label">#S:
-            <textarea name="S" rows="5" class="input" placeholder="Queixa, história dirigida, hábitos (ingesta hídrica, padrão alimentar, atividade física, sono), motivação, trabalho, com quem mora..."></textarea>
+            <textarea name="S" rows="4" class="input" placeholder=""></textarea>
           </label>
           <label class="label">#O:
-            <textarea name="O" rows="4" class="input">BEG, LOC, AAA
+            <textarea name="O" rows="5" class="input">BEG, LOC, AAA
 AC: RCR 2T BNF SS | AP: MV+ bilat., sem ruídos adventícios
 Abdome: RHA+, depressível, sem dor
 Neuro: sem déficits focais</textarea>
           </label>
           <label class="label">#P:
-            <textarea name="P" rows="6" class="input">Prescrevo.
-Oriento prática regular de atividade física. Evitar jejum prolongado e bebidas açucaradas e aumentar ingesta hídrica.
-Explico sobre fisiologia dos medicamentos, explico sobre possíveis efeitos colaterais associados.
-Alerto sobre sinais de alarme: dor abdominal intensa, náuseas persistentes, vômitos, icterícia, palpitações, hipotensão, hipoglicemia — se presentes, buscar avaliação médica.</textarea>
+            <textarea name="P" rows="7" class="input">Prescrevo.
+Oriento prática regular de atividade física. Evitar jejum prolongado e bebidas
+açucaradas e aumentar ingesta hídrica.
+Explico sobre fisiologia dos medicamentos, explico sobre possíveis efeitos
+colaterais associados.
+Alerto sobre sinais de alarme: dor abdominal intensa, náuseas persistentes,
+vômitos, icterícia, palpitações, hipotensão, hipoglicemia — se presentes,
+buscar avaliação médica.</textarea>
           </label>
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-          <button type="button" id="btnGerarViaUnica" class="btn btn-primary w-full">Salvar & Gerar via única (PDF)</button>
-          <button type="button" id="btnCopiarTexto" class="btn btn-ghost w-full">Copiar texto</button>
+          <button type="button" id="btnSalvarImprimir" class="btn btn-primary w-full">Salvar & Imprimir (via única SOAP + via única Prescrição)</button>
+          <button type="button" id="btnCopiarTexto" class="btn btn-ghost w-full">Copiar somente o texto SOAP</button>
         </div>
       </form>
 
       <div class="card p-6">
-        <h3 class="text-lg font-semibold mb-2">Pré-visualização (via única)</h3>
-        <pre id="previewSOAP" class="mono min-h-[360px] p-3 border border-slate-200 rounded-xl">Preencha os campos e clique em “Salvar & Gerar via única (PDF)”.</pre>
+        <h3 class="text-lg font-semibold mb-2">Pré-visualização</h3>
+        <pre id="previewSOAP" class="mono min-h-[260px] p-3 border border-slate-200 rounded-xl">Preencha e clique em “Salvar & Imprimir”.</pre>
+        <div class="mt-4">
+          <h4 class="font-semibold mb-1">Prescrição (prévia)</h4>
+          <pre id="previewRX" class="mono min-h-[120px] p-3 border border-slate-200 rounded-xl">Use a máscara abaixo para montar a prescrição e depois clique em "Adicionar à prescrição".</pre>
+        </div>
       </div>
     </section>
 
-    <!-- Bloco 2: Máscara de prescrição (Wegovy / Mounjaro) -->
+    <!-- Máscara simples de Prescrição -->
     <section class="mt-8 card p-6 space-y-4 no-print">
       <h2 class="text-lg font-semibold">Máscara de Prescrição</h2>
-      <div class="grid grid-cols-1 md:grid-cols-6 gap-3">
+      <div class="grid grid-cols-1 md:grid-cols-5 gap-3">
         <label class="label">Medicamento
           <select id="med" class="input">
             <option value="wegovy">Wegovy (semaglutida)</option>
@@ -132,44 +138,22 @@ Alerto sobre sinais de alarme: dor abdominal intensa, náuseas persistentes, vô
         <label class="label">Dose/sem (mg)
           <input type="number" step="0.05" id="doseSem" class="input" placeholder="ex.: 0.5">
         </label>
-        <label class="label">Nº de doses (semanas)
+        <label class="label">Nº de doses (Mounjaro)
           <input type="number" min="1" step="1" id="nDoses" value="4" class="input">
         </label>
         <label class="label">Multiplicadores Wegovy
           <input id="wgMult" class="input" value="1,1,2,2,4">
-          <div class="note">Ex.: 1,1,2,2,4 → semanas com 1×,1×,2×,2×,4× os cliques-base</div>
         </label>
-        <div class="label">Resultado
-          <div id="resultadoMask" class="input bg-slate-50">—</div>
-        </div>
       </div>
       <div class="flex gap-3">
-        <button type="button" id="btnCalcMask" class="btn btn-primary">Calcular cliques/dose</button>
-        <button type="button" id="btnAddPresc" class="btn btn-ghost">Adicionar ao texto</button>
+        <button type="button" id="btnCalcMask" class="btn btn-primary">Calcular / Gerar texto</button>
+        <button type="button" id="btnAddRX" class="btn btn-ghost">Adicionar à prescrição</button>
       </div>
-      <details class="text-sm">
-        <summary class="cursor-pointer font-medium">Tabela de referência (cliques)</summary>
-        <div class="mt-2 overflow-x-auto border rounded-xl">
-          <table class="w-full text-sm">
-            <thead class="bg-slate-100">
-              <tr><th class="p-2 text-left">DOSE</th><th class="p-2 text-left">VOLUME</th><th class="p-2 text-left">PROPORÇÃO</th></tr>
-            </thead>
-            <tbody>
-              <tr><td class="p-2">WEGOVY 0,25 mg</td><td class="p-2">1,5 mL</td><td class="p-2">37 cliques — caneta 0,25 mg</td></tr>
-              <tr class="bg-slate-50"><td class="p-2">WEGOVY 0,5 mg</td><td class="p-2">1,5 mL</td><td class="p-2">19 cliques — caneta 0,25 mg</td></tr>
-              <tr><td class="p-2">WEGOVY 1 mg</td><td class="p-2">3 mL</td><td class="p-2">19 cliques — caneta 0,25 mg</td></tr>
-              <tr class="bg-slate-50"><td class="p-2">WEGOVY 1,7 mg</td><td class="p-2">3 mL</td><td class="p-2">11 cliques — caneta 0,25 mg</td></tr>
-              <tr><td class="p-2">WEGOVY 2,4 mg</td><td class="p-2">3 mL</td><td class="p-2">8 cliques — caneta 0,25 mg</td></tr>
-              <tr class="bg-slate-50"><td class="p-2">MOUNJARO 2,5 / 5 / 7,5 / 10 mg</td><td class="p-2">—</td><td class="p-2">1 ampola = 1 dose</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </details>
     </section>
 
-    <!-- Área de impressão: via única -->
+    <!-- Área de impressão ÚNICA: SOAP + Prescrição, uma vez cada -->
     <section id="printArea" class="print-only">
-      <div class="flex items-start gap-4">
+      <div style="display:flex; gap:12px; align-items:flex-start">
         <img src="./logo.png" alt="SannoMed" style="height:56px">
         <div>
           <h2 style="margin:0;font-weight:800;">Consulta de Emagrecimento — Via única (SOAP)</h2>
@@ -178,7 +162,10 @@ Alerto sobre sinais de alarme: dor abdominal intensa, náuseas persistentes, vô
           </div>
         </div>
       </div>
-      <pre id="outPrint" class="mono" style="margin-top:8px"></pre>
+      <pre id="outSOAP" class="mono" style="margin-top:8px"></pre>
+      <hr style="margin:16px 0;border:none;border-top:1px solid #e2e8f0"/>
+      <h2 style="margin:0 0 6px 0;font-weight:800;">Prescrição — Via única</h2>
+      <pre id="outRX" class="mono"></pre>
     </section>
   </main>
 
@@ -204,55 +191,54 @@ Alerto sobre sinais de alarme: dor abdominal intensa, náuseas persistentes, vô
       updateIMC();
     })();
 
-    // Construção do texto SOAP via única
     function formToObj(form){ return Object.fromEntries(new FormData(form).entries()); }
-    function buildViaUnica(d){
+    function buildSOAP(d){
       return `#Data: ${d.dataConsulta||''}
 #Nome do paciente: ${d.nome||''}
 #Comorbidade: ${d.comorbidade||'NEGA'}
 #Alergias: ${d.alergias||'NEGA'}
 #MUC: ${d.muc||''}
 #Peso: ${d.peso||''} | #Altura: ${d.altura||''} | #IMC: ${(d.peso&&d.altura)?(parseFloat(d.peso)/(parseFloat(d.altura)**2)).toFixed(1):''}
-
 #S:
 ${d.S||''}
-
 #O:
 ${d.O||''}
-
 #P:
 ${d.P||''}`;
     }
 
+    const previewSOAP = document.getElementById('previewSOAP');
+    const previewRX = document.getElementById('previewRX');
+    const outSOAP = document.getElementById('outSOAP');
+    const outRX = document.getElementById('outRX');
     const formPront = document.getElementById('formPront');
-    const preview = document.getElementById('previewSOAP');
-    const outPrint = document.getElementById('outPrint');
 
-    document.getElementById('btnGerarViaUnica').addEventListener('click', () => {
+    let lastRX = ''; // guarda a prescrição montada
+
+    document.getElementById('btnSalvarImprimir').addEventListener('click', () => {
       const data = formToObj(formPront);
-      const texto = buildViaUnica(data);
-      preview.textContent = texto;
-      outPrint.textContent = texto;
+      const soap = buildSOAP(data);
+      previewSOAP.textContent = soap;
+      outSOAP.textContent = soap;
+      outRX.textContent = lastRX || '—';
       window.print();
     });
     document.getElementById('btnCopiarTexto').addEventListener('click', async () => {
-      const txt = preview.textContent.trim();
-      if (!txt) return alert('Gere a via única primeiro.');
-      await navigator.clipboard.writeText(txt);
-      alert('Texto copiado!');
+      const data = formToObj(formPront);
+      const soap = buildSOAP(data);
+      await navigator.clipboard.writeText(soap);
+      alert('Texto SOAP copiado!');
     });
 
-    // Máscara de prescrição — cálculo de cliques
+    // Lógica máscara simples (Wegovy/Mounjaro) para gerar bloco de prescrição
     const BASE_CLICK_0_25 = { "wg-0.25":75, "wg-0.5":37, "wg-1.0":19, "wg-1.7":11, "wg-2.4":8 };
     const LABELS_WG = { "wg-0.25":"0,25mg", "wg-0.5":"0,5mg", "wg-1.0":"1mg", "wg-1.7":"1,7mg", "wg-2.4":"2,4mg" };
 
-    function buildWegovyText(apres, multipliersStr){
-      const baseClicks = BASE_CLICK_0_25[apres];
-      const labelDose = LABELS_WG[apres] || "";
-      let lines = [];
-      const mults = (multipliersStr||"").split(",").map(s=>parseFloat(s.trim())).filter(n=>!isNaN(n) && n>0);
-      if (mults.length===0){ lines = [1,1,2,2,4]; } else { lines = mults; }
-      const weeks = lines.map((m,i)=>`Na semana ${i+1} aplicar ${Math.round(baseClicks*m)} cliques`).join("\n");
+    function buildWegovy(apres, multStr){
+      const base = BASE_CLICK_0_25[apres];
+      const labelDose = LABELS_WG[apres];
+      const mults = (multStr||'1,1,2,2,4').split(',').map(s=>parseFloat(s.trim())).filter(n=>!isNaN(n)&&n>0);
+      const weeks = (mults.length?mults:[1,1,2,2,4]).map((m,i)=>`Na semana ${i+1} aplicar ${Math.round(base*m)} cliques`).join('\n');
       return `USO SUBCUTÂNEO
 1. Wegovy ${labelDose} (Semaglutida) - 1Cx
 Aplicar por via subcutânea, 1x por semana, sempre no mesmo dia. 
@@ -260,8 +246,8 @@ ${weeks}
 Local de aplicação cerca de 4 dedos da cicatriz umbilical, alternando os locais de aplicação`;
     }
 
-    function buildMounjaroText(labelDose, nDoses){
-      const d = (labelDose || '').replace('Mounjaro ','').replace(' mg/dose','').trim();
+    function buildMounjaro(label, nDoses){
+      const d = (label||'').replace('Mounjaro ','').replace(' mg/dose','').trim();
       const dosePretty = d.replace(' ','');
       const n = Math.max(1, parseInt(nDoses||'4',10));
       return `USO SUBCUTÂNEO
@@ -270,44 +256,25 @@ Aplicar por via subcutânea, 1x por semana, sempre no mesmo dia (${n} doses)
 Local de aplicação cerca de 4 dedos da cicatriz umbilical, alternando os locais de aplicação`;
     }
 
-    function calcMask(){
+    document.getElementById('btnCalcMask').addEventListener('click', () => {
       const med = document.getElementById('med').value;
       const apres = document.getElementById('apres').value;
-      const dose = parseFloat(document.getElementById('doseSem').value||'0');
-      const nDoses = document.getElementById('nDoses').value;
-      const wgMult = document.getElementById('wgMult').value;
-      let result = '—';
-      let longText = '';
-
-      if (med === 'wegovy'){
-        const base = BASE_CLICK_0_25[apres];
-        if (!base){ result = 'Apresentação inválida'; }
-        else {
-          // Mantemos o cálculo resumido proporcional à dose para exibir na caixa de resultado
-          if (!dose || dose<=0){ result = 'Informe uma dose/semana válida'; }
-          else {
-            const clicks = Math.round(base * (dose / 0.25));
-            result = `${clicks} cliques/semana (dose ${dose.toFixed(2)} mg)`;
-          }
-          longText = buildWegovyText(apres, wgMult);
-        }
-      } else {
-        const label = document.getElementById('apres').selectedOptions[0].textContent; // ex.: "Mounjaro 2,5 mg/dose"
-        result = `1 seringa por semana (${label.replace('Mounjaro ','')})`;
-        longText = buildMounjaroText(label, nDoses);
+      const mult = document.getElementById('wgMult').value;
+      const nD = document.getElementById('nDoses').value;
+      let text = '';
+      if (med==='wegovy'){ text = buildWegovy(apres, mult); }
+      else {
+        const label = document.getElementById('apres').selectedOptions[0].textContent;
+        text = buildMounjaro(label, nD);
       }
+      previewRX.textContent = text;
+    });
 
-      document.getElementById('resultadoMask').textContent = result;
-      return { result, longText };
-    }
-    document.getElementById('btnCalcMask').addEventListener('click', () => { calcMask(); });
-    document.getElementById('btnAddPresc').addEventListener('click', () => {
-      const { longText } = calcMask();
-      if (!longText){ alert('Calcule primeiro a dose.'); return; }
-      const cur = preview.textContent || '';
-      const block = (cur ? cur + "\n\n" : "") + longText;
-      preview.textContent = block;
-      outPrint.textContent = block;
+    document.getElementById('btnAddRX').addEventListener('click', () => {
+      const txt = previewRX.textContent.trim();
+      if (!txt){ alert('Gere o texto da prescrição primeiro.'); return; }
+      lastRX = txt;
+      alert('Prescrição adicionada à via de impressão!');
     });
   </script>
 </body>
