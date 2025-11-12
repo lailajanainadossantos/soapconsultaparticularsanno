@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Gerador SOAP — Emagrecimento (v26)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .card { background:#fff; border-radius:18px; box-shadow: 0 12px 30px rgba(2,6,23,.06); }
+    .label { font-size:12px; color:#334155; font-weight:600; letter-spacing:.02em }
+    .input { width:100%; padding:.7rem .9rem; border:1px solid #e2e8f0; border-radius:12px; }
+    .btn  { padding:.55rem .9rem; border-radius:10px; font-weight:700; }
+    .btn-primary{ background:#2563eb; color:#fff; }
+    .btn-ghost { border:1px solid #e2e8f0; background:#fff; }
+    .btn-sm { padding:.3rem .5rem; font-size:11px; border-radius:8px; font-weight:600; }
+    .mono { white-space:pre-wrap; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Courier New", monospace; font-size: 13px; line-height:1.5 }
+    .rx-card { border:1px solid #e2e8f0; border-radius:10px; padding:10px; display:flex; flex-direction:column; min-height: 185mm; }
+    .rx-headline { font-size:14px; font-weight:800; text-align:center; margin-bottom:6px; }
+    .rx-header { display:flex; gap:8px; align-items:center; justify-content:center; margin-bottom:6px; }
+    .rx-header img { height:34px; }
+    .rx-meta { font-size:11px; color:#334155; text-align:center; }
+    .rx-body { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Courier New", monospace; font-size:11px; line-height:1.5; white-space:pre-wrap; flex: 1 1 auto; }
+    .sig { border-top:1px solid #000; width:100%; text-align:center; font-size:11px; padding-top:4px; margin-top:8px; }
+    .editable { min-height: 180px; border: 1px solid #e2e8f0; border-radius: 12px; padding: .75rem .9rem; outline: none; }
+    .editable:empty:before { content: attr(data-placeholder); color: #94a3b8; }
+    @media print {
+      @page { size: A4 landscape; margin: 12mm; }
+      .no-print { display:none !important; }
+      .print-only { display:block !important; }
+      body { background:#fff; }
+      .grid-2 { display:grid; grid-template-columns: 1fr 1fr; gap:10px; }
+    }
+    .print-only { display:none; }
+    .grid-2 { display:grid; grid-template-columns: 1fr 1fr; gap:10px; }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-900 min-h-screen">
+  <main class="max-w-6xl mx-auto p-6">
+    <header class="no-print mb-6 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <img src="./logo.png" class="h-8 w-auto rounded-sm ring-1 ring-slate-200 bg-white p-1" alt="SannoMed">
+        <div>
+          <h1 class="text-2xl font-bold tracking-tight">Gerador SOAP — Emagrecimento</h1>
+          <p class="text-xs text-slate-500">Pág. 1: SOAP | Pág. 2: <b>Receita Médica</b> horizontal (2 vias lado a lado)</p>
+        </div>
+      </div>
+      <div class="hidden md:flex gap-2 text-sm text-slate-600">
+        <span><strong>IMC:</strong> <span id="imcVal">—</span></span>
+      </div>
+    </header>
+
+    <!-- Form + preview (não imprime) -->
+    <section class="grid grid-cols-1 lg:grid-cols-2 gap-6 no-print">
+      <form id="formPront" class="card p-6 space-y-5">
+        <h2 class="text-lg font-semibold">Prontuário — Via única</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <label class="label">#Data automática
+            <input type="date" name="dataConsulta" id="dataConsulta" class="input">
+          </label>
+          <label class="label">#Nome do paciente
+            <input name="nome" class="input" placeholder="Nome completo" value="LAILA JANAINA">
+          </label>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <label class="label">Peso (kg)
+            <input type="number" step="0.1" name="peso" id="peso" class="input" placeholder="65" value="65">
+          </label>
+          <label class="label">Altura (m)
+            <input type="number" step="0.01" name="altura" id="altura" class="input" placeholder="1.69" value="1.69">
+          </label>
+          <div class="label">IMC
+            <div class="input bg-slate-50"><span id="imcBadge">—</span></div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <label class="label">#Comorbidade
+            <input name="comorbidade" class="input" placeholder="NEGA ou descrever" value="Nega">
+          </label>
+          <label class="label">#Alergias
+            <input name="alergias" class="input" placeholder="NEGA ou descrever" value="Nega">
+          </label>
+          <label class="label">#MUC
+            <input name="muc" class="input" placeholder="Medicações em uso correntes" value="Nega">
+          </label>
+        </div>
+
+        <div class="grid grid-cols-1 gap-3">
+          <label class="label">#S:
+            <textarea name="S" rows="4" class="input" placeholder=""></textarea>
+          </label>
+          <label class="label">#O:
+            <textarea name="O" rows="5" class="input">BEG, LOC, AAA
+AC: RCR 2T BNF SS | AP: MV+ bilat., sem ruídos adventícios
+Abdome: RHA+, depressível, sem dor
+Neuro: sem déficits focais</textarea>
+          </label>
+          <label class="label">#P:
+            <textarea name="P" rows="7" class="input">Prescrevo.
+Oriento prática regular de atividade física. Evitar jejum prolongado e bebidas
+açucaradas e aumentar ingesta hídrica.
+Explico sobre fisiologia dos medicamentos, explico sobre possíveis efeitos
+colaterais associados.
+Alerto sobre sinais de alarme: dor abdominal intensa, náuseas persistentes,
+vômitos, icterícia, palpitações, hipotensão, hipoglicemia — se presentes,
+buscar avaliação médica.</textarea>
+          </label>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+          <button type="button" id="btnPrint" class="btn btn-primary w-full">Baixar/Imprimir (2 páginas)</button>
+          <button type="button" id="btnCopiarTexto" class="btn btn-ghost w-full">Copiar SOAP</button>
+          <div class="flex gap-2">
+            <button type="button" id="btnCompactar" class="btn-sm btn-ghost">Compactar fonte (10 px)</button>
+            <button type="button" id="btnExpandir" class="btn-sm btn-ghost">Expandir fonte (12 px)</button>
+          </div>
+        </div>
+      </form>
+
+      <div class="card p-6 space-y-4">
+        <div>
+          <h3 class="text-lg font-semibold mb-2">Prescrição (prévia) — <span class="text-slate-500">editável</span></h3>
+          <div id="previewRX" class="mono editable" contenteditable="true"
+               data-placeholder="Monte pelos botões ou digite/cole aqui. O que estiver aqui será impresso."></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Montagem da prescrição (não imprime) -->
+    <section class="mt-8 card p-6 space-y-4 no-print">
+      <h2 class="text-lg font-semibold">Montar Prescrição</h2>
+
+      <!-- Principal (Wegovy/Mounjaro) -->
+      <div class="grid grid-cols-1 md:grid-cols-5 gap-3">
+        <label class="label">Medicamento
+          <select id="med" class="input">
+            <option value="wegovy">Wegovy (semaglutida)</option>
+            <option value="mounjaro">Mounjaro (tirzepatida)</option>
+          </select>
+        </label>
+        <label class="label">Apresentação
+          <select id="apres" class="input">
+            <option value="wg-0.25">Wegovy 0,25 mg (pen)</option>
+            <option value="wg-0.5">Wegovy 0,5 mg (pen)</option>
+            <option value="wg-1.0">Wegovy 1 mg (pen)</option>
+            <option value="wg-1.7">Wegovy 1,7 mg (pen)</option>
+            <option value="wg-2.4">Wegovy 2,4 mg (pen)</option>
+            <option value="mj-2.5">Mounjaro 2,5 mg/dose</option>
+            <option value="mj-5">Mounjaro 5 mg/dose</option>
+            <option value="mj-7.5">Mounjaro 7,5 mg/dose</option>
+            <option value="mj-10">Mounjaro 10 mg/dose</option>
+          </select>
+        </label>
+        <label class="label">Dose/sem (mg)
+          <input type="number" step="0.05" id="doseSem" class="input" placeholder="ex.: 0.5">
+        </label>
+        <label class="label">Nº de doses (Mounjaro)
+          <input type="number" min="1" step="1" id="nDoses" value="4" class="input">
+        </label>
+        <label class="label">Multiplicadores Wegovy
+          <input id="wgMult" class="input" value="1,1,2,2,4">
+        </label>
+      </div>
+      <div class="flex flex-wrap gap-3">
+        <button type="button" id="btnCalcMask" class="btn btn-ghost">Pré-visualizar principal</button>
+        <button type="button" id="btnAddPrincipal" class="btn btn-primary">Adicionar principal</button>
+      </div>
+
+      <hr class="my-2"/>
+
+      <!-- Botões de adicionar rápidos -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <div class="flex items-center gap-2">
+          <button type="button" id="btnAddOnd" class="btn btn-ghost">+ Adicionar Ondansetrona</button>
+        </div>
+        <div class="flex items-center gap-2">
+          <button type="button" id="btnAddPeg" class="btn btn-ghost">+ Adicionar PEG-Lax</button>
+        </div>
+        <div class="flex items-center gap-2">
+          <input id="customTxt" class="input" placeholder="Item avulso...">
+          <button type="button" id="btnAddCustom" class="btn btn-ghost">+ Adicionar</button>
+        </div>
+      </div>
+
+      <div class="mt-3 flex gap-2">
+        <button type="button" id="btnLimparTodos" class="btn btn-ghost">Limpar prescrição</button>
+      </div>
+    </section>
+
+    <!-- PÁGINA 1: somente SOAP -->
+    <section id="printSOAP" class="print-only">
+      <pre id="outSOAP" class="mono"></pre>
+    </section>
+
+    <!-- PÁGINA 2: RECEITA MÉDICA horizontal, 2 vias lado a lado -->
+    <section id="printRX" class="print-only" style="page-break-before: always;">
+      <div class="grid-2">
+        <div id="rxVia1" class="rx-card">
+          <div class="rx-headline">RECEITA MÉDICA — 1ª via</div>
+          <div class="rx-header">
+            <img src="./logo.png" alt="SannoMed">
+          </div>
+          <div class="rx-meta" id="meta1"></div>
+          <div class="rx-body" id="body1"></div>
+          <div class="sig">Dra. Laila Janaína dos Santos — CRM-SC 38237</div>
+          <div class="rx-meta" style="margin-top:6px;">Rua Otto Júlio Malina, 671 • Tel: (48) 3034-3735 • contato@sannomed.com.br</div>
+        </div>
+        <div id="rxVia2" class="rx-card">
+          <div class="rx-headline">RECEITA MÉDICA — 2ª via</div>
+          <div class="rx-header">
+            <img src="./logo.png" alt="SannoMed">
+          </div>
+          <div class="rx-meta" id="meta2"></div>
+          <div class="rx-body" id="body2"></div>
+          <div class="sig">Dra. Laila Janaína dos Santos — CRM-SC 38237</div>
+          <div class="rx-meta" style="margin-top:6px;">Rua Otto Júlio Malina, 671 • Tel: (48) 3034-3735 • contato@sannomed.com.br</div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+  document.addEventListener('DOMContentLoaded', function(){
+    // Auto-data + IMC
+    const dataEl = document.getElementById('dataConsulta');
+    const today = new Date();
+    const iso = new Date(today.getTime() - (today.getTimezoneOffset()*60000)).toISOString().slice(0,10);
+    dataEl.value = iso;
+    const peso = document.getElementById('peso');
+    const altura = document.getElementById('altura');
+    function updateIMC(){
+      const p = parseFloat(peso.value); const a = parseFloat(altura.value);
+      let imc = NaN;
+      if (p>0 && a>0) imc = p/(a*a);
+      const text = isFinite(imc) ? imc.toFixed(1) : '—';
+      document.getElementById('imcVal').textContent = text;
+      document.getElementById('imcBadge').textContent = text;
+    }
+    peso.addEventListener('input', updateIMC);
+    altura.addEventListener('input', updateIMC);
+    updateIMC();
+
+    function buildSOAP(d){
+      return `#Data: ${d.dataConsulta||''}
+#Nome do paciente: ${d.nome||''}
+#Comorbidade: ${d.comorbidade||'NEGA'}
+#Alergias: ${d.alergias||'NEGA'}
+#MUC: ${d.muc||''}
+#Peso: ${d.peso||''} | #Altura: ${d.altura||''} | #IMC: ${(d.peso&&d.altura)?(parseFloat(d.peso)/(parseFloat(d.altura)**2)).toFixed(1):''}
+#S:
+${d.S||''}
+#O:
+${d.O||''}
+#P:
+${d.P||''}`;
+    }
+
+    // Helpers contenteditable
+    const previewDiv = document.getElementById('previewRX');
+    const getPrev = () => previewDiv.innerText || '';
+    const setPrev = (t) => previewDiv.innerText = t;
+    const appendBlock = (txt) => {
+      const cur = getPrev().trim();
+      setPrev(cur ? (cur + "\\n\\n" + txt) : txt);
+    };
+
+    // Ordinais pt-BR
+    const ORD = ["primeira","segunda","terceira","quarta","quinta","sexta","sétima","oitava","nona","décima"];
+
+    // Modelos padronizados
+    const BASE_CLICK_0_25 = { "wg-0.25":75, "wg-0.5":37, "wg-1.0":19, "wg-1.7":11, "wg-2.4":8 };
+    const LABELS_WG = { "wg-0.25":"0,25mg", "wg-0.5":"0,5mg", "wg-1.0":"1mg", "wg-1.7":"1,7mg", "wg-2.4":"2,4mg" };
+
+    function buildWegovy(apres, multStr){
+      const base = BASE_CLICK_0_25[apres];
+      const labelDose = LABELS_WG[apres];
+      const mults = (multStr||'1,1,2,2,4').split(',').map(s=>parseFloat(s.trim())).filter(n=>!isNaN(n)&&n>0);
+      const arr = (mults.length?mults:[1,1,2,2,4]).map((m,i)=>{
+        const ord = ORD[i] || `${i+1}ª`;
+        return `Na ${ord} semana aplicar ${Math.round(base*m)} cliques`;
+      }).join('\\n');
+      return `1. Wegovy ${labelDose} (Semaglutida) - 1Cx
+Aplicar por via subcutânea, 1x por semana, sempre no mesmo dia. 
+${arr}
+Local de aplicação cerca de 4 dedos da cicatriz umbilical, alternando os locais de aplicação`;
+    }
+
+    function buildMounjaro(label, nDoses){
+      const d = (label||'').replace('Mounjaro ','').replace(' mg/dose','').trim();
+      const dosePretty = d.replace(' ','');
+      const n = Math.max(1, parseInt(nDoses||'4',10));
+      return `1. Mounjaro ${dosePretty}mg - 1CX
+Aplicar por via subcutânea, 1x por semana, sempre no mesmo dia (${n} doses) 
+Local de aplicação cerca de 4 dedos da cicatriz umbilical, alternando os locais de aplicação`;
+    }
+
+    function buildOnd(){
+      return `USO ORAL 
+1. Ondansetrona (ondif ou similar) 8mg _ Cx 
+Tomar 1 cp de 8 em 8h se náusea ou enjoo`;
+    }
+    function buildPeg(){
+      return `USO ORAL
+2. Polietilenoglicol 4000 (Peg-Lax) _ Cx
+Diluir um sache em um copo de água filtrada e tomar 1x ao dia. 
+Aumentar ingesta hídrica e de alimentos ricos em fibra`;
+    }
+
+    // Controles
+    const btnCalc = document.getElementById('btnCalcMask');
+    const btnAdd = document.getElementById('btnAddPrincipal');
+    const btnAddOnd = document.getElementById('btnAddOnd');
+    const btnAddPeg = document.getElementById('btnAddPeg');
+    const btnAddCustom = document.getElementById('btnAddCustom');
+    const btnLimpar = document.getElementById('btnLimparTodos');
+    const btnCompactar = document.getElementById('btnCompactar');
+    const btnExpandir = document.getElementById('btnExpandir');
+    const btnCopiar = document.getElementById('btnCopiarTexto');
+    const btnPrint = document.getElementById('btnPrint');
+
+    let principalTxt = '';
+    btnCalc.addEventListener('click', () => {
+      const medSel = document.getElementById('med').value;
+      const apres = document.getElementById('apres').value;
+      const mult = document.getElementById('wgMult').value;
+      const nD = document.getElementById('nDoses').value;
+      if (medSel==='wegovy'){
+        principalTxt = buildWegovy(apres, mult);
+      } else {
+        const label = document.getElementById('apres').selectedOptions[0].textContent;
+        principalTxt = buildMounjaro(label, nD);
+      }
+      const cur = getPrev().trim();
+      setPrev(principalTxt + (cur ? ('\\n\\n' + cur) : ''));
+    });
+    btnAdd.addEventListener('click', () => {
+      if (!principalTxt){ alert('Clique em "Pré-visualizar principal" antes de adicionar.'); return; }
+      const cur = getPrev().trim();
+      setPrev(principalTxt + (cur ? ('\\n\\n' + cur) : ''));
+    });
+
+    btnAddOnd.addEventListener('click', ()=> appendBlock(buildOnd()));
+    btnAddPeg.addEventListener('click', ()=> appendBlock(buildPeg()));
+    btnAddCustom.addEventListener('click', ()=>{
+      const t = (document.getElementById('customTxt').value||'').trim();
+      if (!t) return;
+      appendBlock(t);
+      document.getElementById('customTxt').value='';
+    });
+    btnLimpar.addEventListener('click', ()=> setPrev(''));
+
+    function setFontSize(px){
+      document.querySelectorAll('.rx-body, #previewRX').forEach(el => el.style.fontSize = px + 'px');
+    }
+    btnCompactar.addEventListener('click', ()=> setFontSize(10));
+    btnExpandir.addEventListener('click', ()=> setFontSize(12));
+
+    btnCopiar.addEventListener('click', async () => {
+      const data = Object.fromEntries(new FormData(document.getElementById('formPront')).entries());
+      const soap = buildSOAP(data);
+      await navigator.clipboard.writeText(soap);
+      alert('Texto SOAP copiado!');
+    });
+
+    function formatDateBR(iso){ if(!iso) return ''; const [y,m,d]=iso.split('-'); return `${d}/${m}/${y}`; }
+
+    function renderVia(viaPrefix, nome, data, bloco){
+      const meta = document.getElementById('meta' + viaPrefix);
+      const body = document.getElementById('body' + viaPrefix);
+      if(!meta || !body) return;
+      meta.textContent = `Paciente: ${nome||''} • Data: ${formatDateBR(data)||''}`;
+      // Importante: manter quebras de linha -> usar textContent + CSS pre-wrap
+      body.textContent = bloco;
+    }
+
+    btnPrint.addEventListener('click', () => {
+      try {
+        const data = Object.fromEntries(new FormData(document.getElementById('formPront')).entries());
+        const soap = buildSOAP(data);
+        document.getElementById('outSOAP').textContent = soap;
+
+        const blocoRX = getPrev().trim() || '—';
+        renderVia('1', data.nome, data.dataConsulta, blocoRX);
+        renderVia('2', data.nome, data.dataConsulta, blocoRX);
+
+        window.print();
+      } catch (e){
+        alert('Falha ao preparar a impressão: ' + (e && e.message ? e.message : e));
+        console.error(e);
+      }
+    });
+  });
+  </script>
+</body>
+</html>
